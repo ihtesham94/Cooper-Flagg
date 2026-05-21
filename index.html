@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cooper Flagg</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --dark:   #002F2C;
+      --lime:   #8CB800;
+      --light:  #F4F4EF;
+      --mid:    #1A4A45;
+      --muted:  rgba(244,244,239,0.45);
+      --fb:     'Inter', system-ui, sans-serif;
+      --fd:     'Bebas Neue', sans-serif;
+    }
+
+    html { scroll-behavior: auto; }
+
+    body {
+      background: var(--dark);
+      color: var(--light);
+      font-family: var(--fb);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── CURSOR ─────────────────────────────── */
+    #cur {
+      position: fixed; width: 8px; height: 8px;
+      background: var(--lime); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: width .2s, height .2s, background .2s;
+    }
+    #cur.big { width: 40px; height: 40px; background: rgba(140,184,0,.18); }
+
+    /* ── NAV ────────────────────────────────── */
+
+    /* Full-width pill — visible in hero, no logo */
+    #nav {
+      position: fixed;
+      top: 16px;
+      left: 24px; right: 24px;
+      z-index: 100;
+      display: flex; align-items: center; justify-content: flex-end; gap: 4px;
+      padding: 8px 8px 8px 18px;
+      background: rgba(0, 22, 20, 0.32);
+      backdrop-filter: blur(32px) saturate(200%);
+      -webkit-backdrop-filter: blur(32px) saturate(200%);
+      border: 0.5px solid rgba(140,184,0,0.12);
+      border-radius: 100px;
+      white-space: nowrap;
+      transition: background .3s, opacity .5s, transform .5s;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #nav.hidden {
+      opacity: 0;
+      transform: translateY(-12px);
+      pointer-events: none;
+    }
+    .nav-links { display: flex; gap: 2px; }
+    .nav-links a {
+      font-size: 10.5px; font-weight: 500;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: rgba(244,244,239,.55); text-decoration: none;
+      padding: 9px 14px;
+      border-radius: 100px;
+      transition: color .2s, background .2s;
+    }
+    .nav-links a:hover {
+      color: var(--light);
+      background: rgba(140,184,0,0.1);
+    }
+    .nav-cta {
+      font-size: 10.5px; font-weight: 500;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--dark); background: var(--lime);
+      border: none; padding: 10px 18px;
+      border-radius: 100px; cursor: none;
+      text-decoration: none;
+      transition: opacity .2s, transform .15s;
+    }
+    .nav-cta:hover { opacity: .88; transform: scale(.97); }
+
+    /* Standalone logo — appears after hero, top-left */
+    #nav-logo {
+      position: fixed;
+      top: 20px;
+      left: 28px;
+      z-index: 101;
+      opacity: 0;
+      transform: translateY(-10px);
+      pointer-events: none;
+      transition: opacity .5s, transform .5s;
+    }
+    #nav-logo.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    #nav-logo a { display: block; text-decoration: none; }
+    #nav-logo img { height: 180px; width: auto; display: block; }
+
+    /* ── HERO GRID ──────────────────────────── */
+    #hero-grid {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      /* Slightly brighter lines so overlay blend has something to work with */
+      background-image:
+        linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px);
+      background-size: 72px 72px;
+      /* Overlay blend: dark pixels (the silhouette) absorb the grid → grid
+         disappears on the figure, stays visible on the lighter background */
+      mix-blend-mode: overlay;
+      opacity: 0;
+      transition: opacity .6s;
+    }
+
+    /* ── HERO INTRO ─────────────────────────── */
+    #hero-intro {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    /* Measurement lines */
+    .intro-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.14);
+      overflow: visible;
+      transform: scaleX(0);
+      transform-origin: center;
+    }
+    /* Lines bracket the mid-section of the figure.
+       Gap = 38% → 56% = 18vh, enough breathing room for two lines of text */
+    .intro-line--top    { top: 38%; }
+    .intro-line--bottom { top: 56%; }
+
+    /* Tick marks — same inset as labels so they share an optical column */
+    .intro-line::before,
+    .intro-line::after {
+      content: '';
+      position: absolute;
+      top: -5px;
+      width: 1px; height: 11px;
+      background: rgba(255,255,255,0.3);
+    }
+    .intro-line::before { left: 48px; }
+    .intro-line::after  { right: 48px; }
+
+    /* Labels — vertically centred between the two lines.
+       top: 47% = midpoint of 38%+56%. translateY(-50%) centres the block. */
+    .intro-label {
+      position: absolute;
+      top: 47%;
+      transform: translateY(-50%);
+      font-family: 'DM Mono', 'Courier New', monospace;
+      font-size: clamp(15px, 1.7vw, 26px);
+      font-weight: 400;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.65;
+      opacity: 0;
+      white-space: pre-line;
+    }
+    /* Label insets match the tick marks for optical alignment */
+    .intro-label--left  { left: 48px; }
+    .intro-label--right { right: 48px; text-align: right; }
+
+    @media (max-width: 768px) {
+      /* Hide both measurement lines on mobile */
+      .intro-line--top    { display: none; }
+
+      /* Repurpose bottom line as a single full-width separator
+         sitting above the stacked text block at the bottom */
+      .intro-line--bottom {
+        top: auto;
+        bottom: 32vh;
+        left: 24px; right: 24px;
+        background: rgba(255,255,255,0.18);
+      }
+      .intro-line--bottom::before { left: 0; }
+      .intro-line--bottom::after  { right: 0; }
+
+      /* Both labels stack below the separator line */
+      .intro-label {
+        top: auto;
+        transform: none;
+        font-size: clamp(11px, 3.2vw, 14px);
+        letter-spacing: .1em;
+        line-height: 1.7;
+      }
+      /* Left label sits just below the line, left-aligned */
+      .intro-label--left {
+        bottom: 21vh;
+        left: 24px;
+        right: auto;
+        text-align: left;
+      }
+      .intro-label--right {
+        bottom: 21vh;
+        right: 24px;
+        left: auto;
+        text-align: right;
+      }
+    }
+
+    /* Hide hero bottom content — not used in new hero design */
+    #heroText, #heroStat { display: none; }
+
+    /* ── HERO VIDEO ─────────────────────────── */
+    #hero {
+      position: relative;
+      height: 400vh; /* tall scroll container */
+    }
+    #hero-sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      display: flex; align-items: flex-end;
+    }
+    #hero-video {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,47,44,.10) 0%,
+        rgba(0,47,44,.02) 40%,
+        rgba(0,47,44,.55) 80%,
+        rgba(0,47,44,.92) 100%
+      );
+      z-index: 1;
+    }
+    .hero-content {
+      position: relative; z-index: 2;
+      width: 100%;
+      padding: 0 40px 60px;
+      display: flex; align-items: flex-end; justify-content: space-between;
+    }
+    .hero-text-block { max-width: 700px; }
+    .hero-eyebrow {
+      font-size: 11px; font-weight: 500;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--lime); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block; width: 24px; height: 1px;
+      background: var(--lime);
+    }
+    /* TEXT OVERLAY — to be populated */
+    .hero-title {
+      font-family: var(--fd);
+      font-size: clamp(64px, 10vw, 140px);
+      line-height: .92;
+      letter-spacing: .01em;
+      color: var(--light);
+      margin-bottom: 20px;
+    }
+    .hero-title em {
+      font-style: normal;
+      color: var(--lime);
+    }
+    .hero-sub {
+      font-size: 14px; font-weight: 300;
+      color: var(--muted); letter-spacing: .04em;
+      line-height: 1.6;
+    }
+    .hero-stat-block {
+      display: flex; flex-direction: column;
+      align-items: flex-end; gap: 4px;
+      padding-bottom: 4px;
+    }
+    .hero-stat-num {
+      font-family: var(--fd);
+      font-size: clamp(48px, 7vw, 100px);
+      line-height: 1; color: var(--lime);
+    }
+    .hero-stat-label {
+      font-size: 11px; font-weight: 500;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .scroll-hint {
+      position: absolute; bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .scroll-hint span {
+      font-size: 9px; font-weight: 500;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .scroll-line {
+      width: 1px; height: 40px;
+      background: linear-gradient(to bottom, var(--lime), transparent);
+      animation: scrollPulse 2s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%, 100% { opacity: .3; transform: scaleY(.6); transform-origin: top; }
+      50% { opacity: 1; transform: scaleY(1); transform-origin: top; }
+    }
+
+    /* ── STATEMENT SECTION ──────────────────── */
+    #statement {
+      position: relative;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      background: var(--dark);
+      padding: 120px 40px;
+    }
+    .stmt-bg-text {
+      position: absolute;
+      font-family: var(--fd);
+      font-size: clamp(120px, 20vw, 280px);
+      line-height: 1;
+      color: rgba(140,184,0,0.04);
+      white-space: nowrap;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      letter-spacing: .02em;
+      will-change: transform;
+    }
+    .stmt-content {
+      position: relative; z-index: 2;
+      max-width: 900px;
+      text-align: center;
+    }
+    .stmt-eyebrow {
+      font-size: 11px; font-weight: 500;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--lime); margin-bottom: 32px;
+    }
+    .stmt-line {
+      font-family: var(--fd);
+      font-size: clamp(48px, 7.5vw, 112px);
+      line-height: .95;
+      letter-spacing: .02em;
+      color: var(--light);
+      display: block;
+      overflow: hidden;
+    }
+    .stmt-line-inner {
+      display: block;
+      transform: translateY(110%);
+      will-change: transform;
+    }
+    .stmt-line em {
+      font-style: normal;
+      color: var(--lime);
+    }
+    .stmt-divider {
+      width: 40px; height: 1px;
+      background: var(--lime);
+      margin: 40px auto;
+      opacity: 0;
+      will-change: opacity;
+    }
+    .stmt-body {
+      font-size: 16px; font-weight: 300;
+      color: var(--muted); line-height: 1.8;
+      max-width: 520px; margin: 0 auto;
+      opacity: 0; transform: translateY(20px);
+      will-change: opacity, transform;
+    }
+
+    /* ── PARALLAX STRIP ─────────────────────── */
+    #parallax-strip {
+      position: relative;
+      height: 500vh;
+      overflow: hidden;
+    }
+    .pstrip-sticky {
+      position: sticky;
+      top: 0; height: 100vh;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .pstrip-layer {
+      position: absolute; inset: 0;
+      will-change: transform;
+    }
+    .pstrip-bg {
+      background: var(--mid);
+    }
+    .pstrip-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(140,184,0,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(140,184,0,.06) 1px, transparent 1px);
+      background-size: 80px 80px;
+    }
+    .pstrip-word {
+      position: absolute;
+      font-family: var(--fd);
+      line-height: 1;
+      letter-spacing: .02em;
+      white-space: nowrap;
+      will-change: transform;
+    }
+    .pstrip-word-1 {
+      font-size: clamp(80px, 18vw, 260px);
+      color: rgba(244,244,239,0.03);
+      top: 10%; left: -5%;
+    }
+    .pstrip-word-2 {
+      font-size: clamp(60px, 12vw, 180px);
+      color: rgba(140,184,0,0.08);
+      bottom: 15%; right: -5%;
+    }
+    .pstrip-cards {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      gap: 24px;
+      padding: 0 40px;
+    }
+    .pstrip-card {
+      flex: 1; max-width: 280px;
+      background: rgba(244,244,239,0.04);
+      border: 0.5px solid rgba(140,184,0,0.2);
+      border-radius: 4px;
+      padding: 32px 28px;
+      will-change: transform;
+      opacity: 0;
+    }
+    .pcard-num {
+      font-family: var(--fd);
+      font-size: clamp(52px, 7vw, 88px);
+      color: var(--lime);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .pcard-label {
+      font-size: 11px; font-weight: 500;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .pcard-desc {
+      font-size: 13px; font-weight: 300;
+      color: rgba(244,244,239,.5);
+      line-height: 1.6;
+    }
+
+    /* ── TIMELINE ───────────────────────────── */
+    #timeline {
+      position: relative;
+      padding: 140px 0;
+      background: var(--dark);
+      overflow: hidden;
+    }
+    .tl-header {
+      padding: 0 40px;
+      margin-bottom: 80px;
+      display: flex; align-items: flex-end; justify-content: space-between;
+    }
+    .tl-eyebrow {
+      font-size: 11px; font-weight: 500;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--lime); margin-bottom: 12px;
+    }
+    .tl-heading {
+      font-family: var(--fd);
+      font-size: clamp(48px, 6vw, 88px);
+      line-height: .95;
+      color: var(--light);
+    }
+    .tl-sub {
+      font-size: 13px; font-weight: 300;
+      color: var(--muted); max-width: 280px;
+      line-height: 1.7; text-align: right;
+    }
+    .tl-track {
+      position: relative;
+      display: flex;
+      gap: 0;
+      padding: 0 40px;
+      overflow: visible;
+    }
+    .tl-line {
+      position: absolute;
+      top: 52px; left: 40px; right: 40px;
+      height: 1px;
+      background: rgba(140,184,0,0.15);
+    }
+    .tl-progress {
+      position: absolute;
+      top: 52px; left: 40px;
+      height: 1px;
+      background: var(--lime);
+      width: 0%;
+      transition: width .1s;
+      will-change: width;
+    }
+    .tl-item {
+      flex: 1;
+      padding-top: 80px;
+      padding-right: 32px;
+      position: relative;
+      opacity: 0;
+      transform: translateY(24px);
+      will-change: opacity, transform;
+    }
+    .tl-dot {
+      position: absolute;
+      top: 44px; left: 0;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      border: 2px solid rgba(140,184,0,0.3);
+      background: var(--dark);
+      transition: border-color .3s, background .3s;
+    }
+    .tl-dot.active {
+      border-color: var(--lime);
+      background: var(--lime);
+    }
+    .tl-year {
+      font-family: var(--fd);
+      font-size: 13px; letter-spacing: .1em;
+      color: var(--lime);
+      margin-bottom: 6px;
+    }
+    .tl-event {
+      font-family: var(--fd);
+      font-size: clamp(22px, 2.5vw, 32px);
+      line-height: 1.1;
+      color: var(--light);
+      margin-bottom: 10px;
+    }
+    .tl-detail {
+      font-size: 12px; font-weight: 300;
+      color: var(--muted); line-height: 1.6;
+    }
+
+    /* ── MARQUEE ────────────────────────────── */
+    #marquee-section {
+      padding: 24px 0;
+      background: var(--lime);
+      overflow: hidden;
+    }
+    .marquee-track {
+      display: flex; gap: 0;
+      white-space: nowrap;
+      animation: marquee 20s linear infinite;
+    }
+    .marquee-track span {
+      font-family: var(--fd);
+      font-size: 18px; letter-spacing: .08em;
+      color: var(--dark);
+      padding: 0 32px;
+    }
+    .marquee-dot {
+      color: var(--mid);
+      opacity: .5;
+    }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* ── QUOTE SECTION ──────────────────────── */
+    #quote-section {
+      position: relative;
+      padding: 180px 40px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--dark);
+      overflow: hidden;
+    }
+    .quote-bg-mark {
+      position: absolute;
+      font-family: var(--fd);
+      font-size: 400px; line-height: 1;
+      color: rgba(140,184,0,0.03);
+      top: -60px; left: 20px;
+      pointer-events: none;
+      will-change: transform;
+    }
+    .quote-inner {
+      position: relative; z-index: 2;
+      max-width: 800px; text-align: center;
+    }
+    .quote-text {
+      font-family: var(--fd);
+      font-size: clamp(36px, 5.5vw, 80px);
+      line-height: 1.1;
+      color: var(--light);
+      letter-spacing: .02em;
+      margin-bottom: 32px;
+      opacity: 0; transform: translateY(30px);
+      will-change: opacity, transform;
+    }
+    .quote-text em { font-style: normal; color: var(--lime); }
+    .quote-attr {
+      font-size: 11px; font-weight: 500;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0;
+      will-change: opacity;
+    }
+
+    /* ── FOOTER ─────────────────────────────── */
+    #footer {
+      background: #001A18;
+      padding: 80px 40px 48px;
+      border-top: 1px solid rgba(140,184,0,0.1);
+    }
+    .footer-top {
+      display: flex; align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 80px;
+    }
+    .footer-logo {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .footer-wordmark {
+      font-family: var(--fd);
+      font-size: 24px; letter-spacing: .06em;
+      color: var(--light); line-height: 1;
+    }
+    .footer-wordmark span { color: var(--lime); }
+    .footer-motto {
+      font-size: 11px; font-weight: 300;
+      letter-spacing: .08em;
+      color: var(--muted); margin-top: 6px;
+      font-style: italic;
+    }
+    .footer-links {
+      display: flex; gap: 60px;
+    }
+    .footer-col { display: flex; flex-direction: column; gap: 12px; }
+    .footer-col-label {
+      font-size: 10px; font-weight: 500;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--lime); margin-bottom: 4px;
+    }
+    .footer-col a {
+      font-size: 13px; font-weight: 300;
+      color: var(--muted); text-decoration: none;
+      transition: color .2s;
+    }
+    .footer-col a:hover { color: var(--light); }
+    .footer-bottom {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 40px;
+      border-top: 1px solid rgba(140,184,0,0.08);
+    }
+    .footer-copy {
+      font-size: 11px; font-weight: 300;
+      color: rgba(244,244,239,.25);
+      letter-spacing: .04em;
+    }
+    .footer-dirigo {
+      font-family: var(--fd);
+      font-size: 11px; letter-spacing: .14em;
+      color: rgba(140,184,0,.3);
+    }
+
+    /* ── UTILS ──────────────────────────────── */
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px;
+      overflow: hidden; clip: rect(0,0,0,0);
+    }
+  </style>
+</head>
+<body>
+
+<div id="cur"></div>
+
+<!-- ── NAV PILL (full-width, hero only) ────── -->
+<nav id="nav">
+  <div class="nav-links">
+    <a href="#timeline">Career</a>
+    <a href="#quote-section">Story</a>
+    <a href="#">Mavericks</a>
+  </div>
+  <a class="nav-cta" href="#">Contact</a>
+</nav>
+
+<!-- ── STANDALONE LOGO (post-hero, top-left) -->
+<div id="nav-logo">
+  <a href="#">
+    <img src="CF logo white.svg" alt="Cooper Flagg">
+  </a>
+</div>
+
+<!-- ── HERO ───────────────────────────────── -->
+<section id="hero">
+  <div id="hero-sticky">
+  <video id="hero-video" muted playsinline preload="auto">
+    <source src="hero animation.mp4" type="video/mp4">
+  </video>
+
+  <div id="hero-grid"></div>
+  <div class="hero-overlay"></div>
+
+  <!-- Intro: measurement lines + annotations -->
+  <div id="hero-intro">
+    <div class="intro-line intro-line--top" id="introLineTop"></div>
+    <div class="intro-line intro-line--bottom" id="introLineBot"></div>
+    <div class="intro-label intro-label--left"  id="introLabelL">From Newport,<br>Maine.</div>
+    <div class="intro-label intro-label--right" id="introLabelR">1,000 watched him leave.<br>Millions watched him arrive.</div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-text-block" id="heroText">
+      <div class="hero-eyebrow">Dallas Mavericks · #2 · 2026</div>
+      <!-- TITLE TEXT — to be refined -->
+      <h1 class="hero-title" id="heroTitle">
+        COOPER<br><em>FLAGG</em>
+      </h1>
+      <p class="hero-sub">2026 NBA Rookie of the Year · #1 Overall Pick<br>Newport, Maine → Dallas, Texas</p>
+    </div>
+    <div class="hero-stat-block" id="heroStat">
+      <div class="hero-stat-num">#1</div>
+      <div class="hero-stat-label">Overall Pick · 2025 Draft</div>
+    </div>
+  </div>
+
+  <div class="scroll-hint" id="scrollHint">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+  </div><!-- /hero-sticky -->
+</section>
+
+<!-- ── STATEMENT ──────────────────────────── -->
+<section id="statement">
+  <div class="stmt-bg-text" id="stmtBg">DIRIGO</div>
+  <div class="stmt-content">
+    <div class="stmt-eyebrow">Newport, Maine · Population 1,000</div>
+    <span class="stmt-line">
+      <span class="stmt-line-inner" id="sl1">The name was</span>
+    </span>
+    <span class="stmt-line">
+      <span class="stmt-line-inner" id="sl2">always a <em>flag.</em></span>
+    </span>
+    <div class="stmt-divider" id="stmtDiv"></div>
+    <p class="stmt-body" id="stmtBody">
+      This isn't branding. This is fate. From the smallest town in Maine to the biggest stage in basketball — the name said everything before the story began.
+    </p>
+  </div>
+</section>
+
+<!-- ── PARALLAX STATS STRIP ───────────────── -->
+<section id="parallax-strip">
+  <div class="pstrip-sticky" id="pSticky">
+    <div class="pstrip-layer pstrip-bg" id="pBg"></div>
+    <div class="pstrip-layer pstrip-grid" id="pGrid"></div>
+    <div class="pstrip-layer">
+      <div class="pstrip-word pstrip-word-1" id="pWord1">ROOKIE</div>
+      <div class="pstrip-word pstrip-word-2" id="pWord2">OF THE YEAR</div>
+    </div>
+    <div class="pstrip-cards">
+      <div class="pstrip-card" id="pc1">
+        <div class="pcard-num">21.0</div>
+        <div class="pcard-label">PPG</div>
+        <div class="pcard-desc">Points per game in his rookie season — most by a Mavericks rookie since Dirk.</div>
+      </div>
+      <div class="pstrip-card" id="pc2">
+        <div class="pcard-num">6.7</div>
+        <div class="pcard-label">RPG</div>
+        <div class="pcard-desc">Rebounds per game. Elite two-way production from his first night in the league.</div>
+      </div>
+      <div class="pstrip-card" id="pc3">
+        <div class="pcard-num">4.5</div>
+        <div class="pcard-label">APG</div>
+        <div class="pcard-desc">Assists per game. The playmaking instinct that sets him apart from every other rookie.</div>
+      </div>
+      <div class="pstrip-card" id="pc4">
+        <div class="pcard-num">47%</div>
+        <div class="pcard-label">FG%</div>
+        <div class="pcard-desc">Field goal percentage. Efficient from everywhere on the floor in year one.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MARQUEE ────────────────────────────── -->
+<section id="marquee-section">
+  <div class="marquee-track" id="marqueeTrack">
+    <span>Dirigo</span><span class="marquee-dot">·</span>
+    <span>I Lead</span><span class="marquee-dot">·</span>
+    <span>ROY 2026</span><span class="marquee-dot">·</span>
+    <span>Newport Maine</span><span class="marquee-dot">·</span>
+    <span>Dallas Mavericks</span><span class="marquee-dot">·</span>
+    <span>#1 Overall Pick</span><span class="marquee-dot">·</span>
+    <span>North Star</span><span class="marquee-dot">·</span>
+    <span>Dirigo</span><span class="marquee-dot">·</span>
+    <span>I Lead</span><span class="marquee-dot">·</span>
+    <span>ROY 2026</span><span class="marquee-dot">·</span>
+    <span>Newport Maine</span><span class="marquee-dot">·</span>
+    <span>Dallas Mavericks</span><span class="marquee-dot">·</span>
+    <span>#1 Overall Pick</span><span class="marquee-dot">·</span>
+    <span>North Star</span><span class="marquee-dot">·</span>
+  </div>
+</section>
+
+<!-- ── TIMELINE ───────────────────────────── -->
+<section id="timeline">
+  <div class="tl-header">
+    <div>
+      <div class="tl-eyebrow">The Journey</div>
+      <h2 class="tl-heading">From Pine<br>to Parquet</h2>
+    </div>
+    <p class="tl-sub">Every step. Every decision. Every mile from Newport to the NBA.</p>
+  </div>
+
+  <div class="tl-track">
+    <div class="tl-line"></div>
+    <div class="tl-progress" id="tlProgress"></div>
+
+    <div class="tl-item" id="tl1">
+      <div class="tl-dot" id="tldot1"></div>
+      <div class="tl-year">2004</div>
+      <div class="tl-event">Born in<br>Newport, ME</div>
+      <div class="tl-detail">Population 1,000. The smallest place that produced the biggest name.</div>
+    </div>
+
+    <div class="tl-item" id="tl2">
+      <div class="tl-dot" id="tldot2"></div>
+      <div class="tl-year">2022–24</div>
+      <div class="tl-event">Duke<br>University</div>
+      <div class="tl-detail">ACC Freshman of the Year. Proved himself against the best before turning professional.</div>
+    </div>
+
+    <div class="tl-item" id="tl3">
+      <div class="tl-dot" id="tldot3"></div>
+      <div class="tl-year">June 2025</div>
+      <div class="tl-event">#1 Overall<br>Draft Pick</div>
+      <div class="tl-detail">Selected first overall by the Dallas Mavericks. The franchise's next era begins.</div>
+    </div>
+
+    <div class="tl-item" id="tl4">
+      <div class="tl-dot" id="tldot4"></div>
+      <div class="tl-year">2025–26</div>
+      <div class="tl-event">Dallas<br>Mavericks</div>
+      <div class="tl-detail">21.0 PPG · 6.7 RPG · 4.5 APG. Immediately one of the most complete players in the league.</div>
+    </div>
+
+    <div class="tl-item" id="tl5">
+      <div class="tl-dot" id="tldot5"></div>
+      <div class="tl-year">2026</div>
+      <div class="tl-event">Rookie of<br>the <em style="font-style:normal;color:var(--lime)">Year</em></div>
+      <div class="tl-detail">Unanimous. The North Star arrives. Dirigo.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── QUOTE ───────────────────────────────── -->
+<section id="quote-section">
+  <div class="quote-bg-mark" id="quoteBg">"</div>
+  <div class="quote-inner">
+    <div class="quote-text" id="quoteText">
+      This isn't branding.<br>This is <em>fate.</em>
+    </div>
+    <div class="quote-attr" id="quoteAttr">The name was always a flag.</div>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────── -->
+<footer id="footer">
+  <div class="footer-top">
+    <div>
+      <div class="footer-logo">
+        <div class="footer-wordmark">COOPER <span>FLAGG</span></div>
+      </div>
+      <div class="footer-motto">Dirigo — I Lead</div>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <div class="footer-col-label">Navigate</div>
+        <a href="#">Career</a>
+        <a href="#">Story</a>
+        <a href="#">Dallas Mavericks</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-label">Connect</div>
+        <a href="#">Instagram</a>
+        <a href="#">Twitter / X</a>
+        <a href="#">Business Enquiries</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 Cooper Flagg. All rights reserved.</span>
+    <span class="footer-dirigo">DIRIGO</span>
+  </div>
+</footer>
+
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  // ── LENIS SMOOTH SCROLL ─────────────────────
+  const lenis = new Lenis({
+    duration: 1.4,
+    easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    smoothWheel: true,
+    wheelMultiplier: 0.9,
+    touchMultiplier: 1.8,
+  });
+
+  // Keep ScrollTrigger in sync with Lenis
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add(time => lenis.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
+
+  // ── CURSOR ──────────────────────────────────
+  const cur = document.getElementById('cur');
+  document.addEventListener('mousemove', e => {
+    gsap.set(cur, { x: e.clientX, y: e.clientY });
+  });
+  document.querySelectorAll('a, button, .pstrip-card, .tl-item').forEach(el => {
+    el.addEventListener('mouseenter', () => cur.classList.add('big'));
+    el.addEventListener('mouseleave', () => cur.classList.remove('big'));
+  });
+
+  // ── NAV — swap pill ↔ standalone logo at hero end ──
+  const navPill    = document.getElementById('nav');
+  const navLogoEl  = document.getElementById('nav-logo');
+
+  ScrollTrigger.create({
+    trigger: '#hero',
+    start: 'bottom 80%',
+    end: 'bottom 60%',
+    onEnter:      () => { navPill.classList.add('hidden');    navLogoEl.classList.add('visible'); },
+    onLeaveBack:  () => { navPill.classList.remove('hidden'); navLogoEl.classList.remove('visible'); },
+  });
+
+  // ── INTRO SEQUENCE ───────────────────────────
+  const introEl  = document.getElementById('hero-intro');
+  const gridEl   = document.getElementById('hero-grid');
+  const lineTop  = document.getElementById('introLineTop');
+  const lineBot  = document.getElementById('introLineBot');
+  const labelL   = document.getElementById('introLabelL');
+  const labelR   = document.getElementById('introLabelR');
+
+  // Text scramble utility
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789·—_';
+  function scramble(el, finalText, duration, delay) {
+    setTimeout(() => {
+      const total  = Math.round(duration / 16);
+      let   frame  = 0;
+      const tick = () => {
+        const progress = frame / total;
+        el.textContent = finalText.split('').map((ch, i) => {
+          if (ch === ' ' || ch === '\n') return ch;
+          const revealed = progress > (i / finalText.length) * 0.7 + 0.3;
+          return revealed ? ch : CHARS[Math.floor(Math.random() * CHARS.length)];
+        }).join('');
+        frame++;
+        if (frame <= total) requestAnimationFrame(tick);
+        else el.textContent = finalText;
+      };
+      requestAnimationFrame(tick);
+    }, delay);
+  }
+
+  let introVisible  = false;
+  let introTimers   = [];
+
+  function clearIntroTimers() {
+    introTimers.forEach(t => clearTimeout(t));
+    introTimers = [];
+  }
+
+  function dismissIntro() {
+    if (!introVisible) return;
+    introVisible = false;
+    clearIntroTimers();
+    gsap.killTweensOf([introEl, gridEl, lineTop, lineBot, labelL, labelR]);
+    gsap.to([introEl, gridEl], { opacity: 0, duration: 0.35, ease: 'power2.in' });
+  }
+
+  function showIntro() {
+    if (introVisible) return;
+    introVisible = true;
+
+    // Reset before replaying
+    gsap.killTweensOf([introEl, gridEl, lineTop, lineBot, labelL, labelR]);
+    gsap.set([lineTop, lineBot], { scaleX: 0 });
+    gsap.set([labelL, labelR],  { opacity: 0 });
+    labelL.textContent = '';
+    labelR.textContent = '';
+
+    // 1. Grid + overlay fade in
+    gsap.to(gridEl,  { opacity: 1, duration: 0.7, delay: 0.1 });
+    gsap.to(introEl, { opacity: 1, duration: 0.4, delay: 0.2 });
+
+    // 2. Lines draw out from centre
+    gsap.to([lineTop, lineBot], {
+      scaleX: 1, duration: 0.9, ease: 'power3.out',
+      delay: 0.45, stagger: 0.12
+    });
+
+    // 3. Labels scramble in
+    introTimers.push(setTimeout(() => {
+      if (!introVisible) return;
+      gsap.set([labelL, labelR], { opacity: 1 });
+      scramble(labelL, 'From Newport,\nMaine.',                             600, 0);
+      scramble(labelR, '1,000 watched him leave.\nMillions watched him arrive.', 900, 0);
+    }, 1050));
+  }
+
+  // Run on page load
+  if (document.readyState === 'complete') showIntro();
+  else window.addEventListener('load', showIntro);
+
+  // Show intro when back at top, dismiss when scrolling away
+  lenis.on('scroll', ({ scroll }) => {
+    if (scroll < 8) {
+      showIntro();
+    } else {
+      dismissIntro();
+    }
+  });
+
+  // ── SCROLL-DRIVEN VIDEO ─────────────────────
+  // ScrollTrigger tracks scroll progress → sets targetTime.
+  // A separate rAF loop lerps currentTime toward targetTime
+  // each frame, giving buttery smooth video scrubbing in both
+  // directions regardless of how fast the user scrolls.
+  const heroVideo = document.getElementById('hero-video');
+  heroVideo.pause();
+  heroVideo.currentTime = 0;
+
+  let videoTargetTime = 0;
+  let videoCurrentTime = 0;
+  const LERP = 0.07; // smoothing factor — lower = smoother/lazier
+
+  function videoLerpLoop() {
+    if (heroVideo.duration && isFinite(videoTargetTime)) {
+      videoCurrentTime += (videoTargetTime - videoCurrentTime) * LERP;
+      // Only seek if meaningfully different (avoids unnecessary seeks)
+      if (Math.abs(videoCurrentTime - heroVideo.currentTime) > 0.001) {
+        heroVideo.currentTime = videoCurrentTime;
+      }
+    }
+    requestAnimationFrame(videoLerpLoop);
+  }
+
+  function setupVideoScrub() {
+    ScrollTrigger.create({
+      trigger: '#hero',
+      start: 'top top',
+      end: 'bottom bottom',
+      onUpdate: self => {
+        videoTargetTime = heroVideo.duration * self.progress;
+      }
+    });
+    videoLerpLoop();
+  }
+
+  if (heroVideo.readyState >= 2) {
+    setupVideoScrub();
+  } else {
+    heroVideo.addEventListener('loadedmetadata', setupVideoScrub, { once: true });
+  }
+
+  // Scroll hint fades on first scroll
+  gsap.to('#scrollHint', {
+    opacity: 0, ease: 'none',
+    scrollTrigger: {
+      trigger: '#hero',
+      start: '5% top',
+      end: '15% top',
+      scrub: true
+    }
+  });
+
+  // ── STATEMENT SECTION ───────────────────────
+  // Background text parallax
+  gsap.to('#stmtBg', {
+    x: '8%',
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '#statement',
+      start: 'top bottom',
+      end: 'bottom top',
+      scrub: 1
+    }
+  });
+
+  // Text lines rise up
+  const stmtTl = gsap.timeline({
+    scrollTrigger: {
+      trigger: '#statement',
+      start: 'top 70%',
+      toggleActions: 'play none none reverse'
+    }
+  });
+  stmtTl
+    .to('#sl1', { y: 0, duration: .9, ease: 'power3.out' })
+    .to('#sl2', { y: 0, duration: .9, ease: 'power3.out' }, '<.12')
+    .to('#stmtDiv', { opacity: 1, duration: .6 }, '-=.3')
+    .to('#stmtBody', { opacity: 1, y: 0, duration: .8, ease: 'power2.out' }, '-=.3');
+
+  // ── PARALLAX STRIP ──────────────────────────
+  const stripTl = gsap.timeline({
+    scrollTrigger: {
+      trigger: '#parallax-strip',
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 1.5,
+      pin: false
+    }
+  });
+
+  // Background colour shift
+  gsap.to('#pBg', {
+    backgroundColor: '#0A2E28',
+    scrollTrigger: {
+      trigger: '#parallax-strip',
+      start: 'top top',
+      end: '50% top',
+      scrub: 1
+    }
+  });
+
+  // Words move at different rates
+  gsap.to('#pWord1', {
+    x: '30%',
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '#parallax-strip',
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 2
+    }
+  });
+  gsap.to('#pWord2', {
+    x: '-25%',
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '#parallax-strip',
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 2.5
+    }
+  });
+
+  // Grid parallax
+  gsap.to('#pGrid', {
+    y: '-15%',
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '#parallax-strip',
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 1
+    }
+  });
+
+  // Cards stagger in
+  gsap.to(['#pc1','#pc2','#pc3','#pc4'], {
+    opacity: 1,
+    y: 0,
+    stagger: .12,
+    duration: .8,
+    ease: 'power2.out',
+    scrollTrigger: {
+      trigger: '#parallax-strip',
+      start: 'top 40%',
+      toggleActions: 'play none none reverse'
+    }
+  });
+
+  // Cards slight parallax
+  gsap.to('#pc1', { y: '-8%', ease: 'none', scrollTrigger: { trigger: '#parallax-strip', start: 'top top', end: 'bottom bottom', scrub: 1 }});
+  gsap.to('#pc2', { y: '-4%', ease: 'none', scrollTrigger: { trigger: '#parallax-strip', start: 'top top', end: 'bottom bottom', scrub: 1.5 }});
+  gsap.to('#pc3', { y: '-12%', ease: 'none', scrollTrigger: { trigger: '#parallax-strip', start: 'top top', end: 'bottom bottom', scrub: .8 }});
+  gsap.to('#pc4', { y: '-6%', ease: 'none', scrollTrigger: { trigger: '#parallax-strip', start: 'top top', end: 'bottom bottom', scrub: 2 }});
+
+  // ── TIMELINE ────────────────────────────────
+  const tlItems = ['#tl1','#tl2','#tl3','#tl4','#tl5'];
+  const tlDots  = ['#tldot1','#tldot2','#tldot3','#tldot4','#tldot5'];
+
+  tlItems.forEach((id, i) => {
+    gsap.to(id, {
+      opacity: 1,
+      y: 0,
+      duration: .7,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: '#timeline',
+        start: `top ${70 - i * 5}%`,
+        toggleActions: 'play none none reverse'
+      }
+    });
+  });
+
+  // Progress line + dot activation
+  ScrollTrigger.create({
+    trigger: '#timeline',
+    start: 'top 60%',
+    end: 'bottom 60%',
+    scrub: true,
+    onUpdate: self => {
+      document.getElementById('tlProgress').style.width = (self.progress * 100) + '%';
+      tlDots.forEach((id, i) => {
+        const el = document.querySelector(id);
+        el.classList.toggle('active', self.progress >= i / (tlDots.length - 1) - .05);
+      });
+    }
+  });
+
+  // ── QUOTE SECTION ───────────────────────────
+  gsap.to('#quoteBg', {
+    y: '-20%',
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '#quote-section',
+      start: 'top bottom',
+      end: 'bottom top',
+      scrub: 1
+    }
+  });
+  gsap.to('#quoteText', {
+    opacity: 1, y: 0,
+    duration: 1, ease: 'power3.out',
+    scrollTrigger: {
+      trigger: '#quote-section',
+      start: 'top 65%',
+      toggleActions: 'play none none reverse'
+    }
+  });
+  gsap.to('#quoteAttr', {
+    opacity: 1,
+    duration: .8, ease: 'power2.out',
+    delay: .4,
+    scrollTrigger: {
+      trigger: '#quote-section',
+      start: 'top 60%',
+      toggleActions: 'play none none reverse'
+    }
+  });
+
+</script>
+</body>
+</html>
