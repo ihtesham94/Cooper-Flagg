@@ -189,8 +189,6 @@
     .intro-label--right { right: 48px; text-align: right; }
 
     @media (max-width: 768px) {
-      #hero-grid { opacity: 0 !important; } /* hide grid on mobile — video handles depth */
-
       /* Hide both measurement lines on mobile */
       .intro-line--top    { display: none; }
 
@@ -720,7 +718,7 @@
 <section id="hero">
   <div id="hero-sticky">
   <video id="hero-video" muted playsinline preload="auto" poster="cooper-base.png">
-    <source src="hero animation.mp4" type="video/mp4">
+    <source src="hero animation.mp4#t=0.001" type="video/mp4">
   </video>
 
   <div id="hero-grid"></div>
@@ -1053,51 +1051,53 @@
   // each frame, giving buttery smooth video scrubbing in both
   // directions regardless of how fast the user scrolls.
   const heroVideo = document.getElementById('hero-video');
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+  heroVideo.pause();
+  heroVideo.currentTime = 0;
 
-  if (isMobile) {
-    // On mobile: autoplay + loop — iOS blocks currentTime scrubbing
-    heroVideo.setAttribute('autoplay', '');
-    heroVideo.setAttribute('loop', '');
-    heroVideo.play().catch(() => {}); // silent catch if blocked
-    // Collapse hero scroll height on mobile so it doesn't trap scroll
-    document.getElementById('hero').style.height = '100vh';
-  } else {
-    // Desktop: scroll-driven scrubbing
-    heroVideo.pause();
-    heroVideo.currentTime = 0;
+  let videoTargetTime   = 0;
+  let videoCurrentTime  = 0;
+  let videoUnlocked     = false;
+  const LERP = 0.07;
 
-    let videoTargetTime = 0;
-    let videoCurrentTime = 0;
-    const LERP = 0.07;
+  // iOS Safari requires a play() call triggered by a user gesture before
+  // currentTime seeking works. We play → pause on first touch to unlock it.
+  function unlockVideo() {
+    if (videoUnlocked) return;
+    videoUnlocked = true;
+    heroVideo.play().then(() => {
+      heroVideo.pause();
+      heroVideo.currentTime = videoCurrentTime;
+    }).catch(() => {});
+  }
+  document.addEventListener('touchstart', unlockVideo, { once: true });
+  document.addEventListener('scroll',     unlockVideo, { once: true, passive: true });
 
-    function videoLerpLoop() {
-      if (heroVideo.duration && isFinite(videoTargetTime)) {
-        videoCurrentTime += (videoTargetTime - videoCurrentTime) * LERP;
-        if (Math.abs(videoCurrentTime - heroVideo.currentTime) > 0.001) {
-          heroVideo.currentTime = videoCurrentTime;
-        }
+  function videoLerpLoop() {
+    if (heroVideo.duration && isFinite(videoTargetTime)) {
+      videoCurrentTime += (videoTargetTime - videoCurrentTime) * LERP;
+      if (Math.abs(videoCurrentTime - heroVideo.currentTime) > 0.001) {
+        heroVideo.currentTime = videoCurrentTime;
       }
-      requestAnimationFrame(videoLerpLoop);
     }
+    requestAnimationFrame(videoLerpLoop);
+  }
 
-    function setupVideoScrub() {
-      ScrollTrigger.create({
-        trigger: '#hero',
-        start: 'top top',
-        end: 'bottom bottom',
-        onUpdate: self => {
-          videoTargetTime = heroVideo.duration * self.progress;
-        }
-      });
-      videoLerpLoop();
-    }
+  function setupVideoScrub() {
+    ScrollTrigger.create({
+      trigger: '#hero',
+      start: 'top top',
+      end: 'bottom bottom',
+      onUpdate: self => {
+        videoTargetTime = heroVideo.duration * self.progress;
+      }
+    });
+    videoLerpLoop();
+  }
 
-    if (heroVideo.readyState >= 2) {
-      setupVideoScrub();
-    } else {
-      heroVideo.addEventListener('loadedmetadata', setupVideoScrub, { once: true });
-    }
+  if (heroVideo.readyState >= 2) {
+    setupVideoScrub();
+  } else {
+    heroVideo.addEventListener('loadedmetadata', setupVideoScrub, { once: true });
   }
 
   // Scroll hint fades on first scroll
