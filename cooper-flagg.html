@@ -921,16 +921,19 @@
 <script>
   gsap.registerPlugin(ScrollTrigger);
 
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+
   // ── LENIS SMOOTH SCROLL ─────────────────────
+  // Disabled on mobile — iOS native scroll is far smoother for video scrubbing
   const lenis = new Lenis({
-    duration: 1.4,
-    easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    smoothWheel: true,
+    duration:        isMobile ? 0 : 1.4,
+    easing:          t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    smoothWheel:     !isMobile,
+    smoothTouch:     false,   // never intercept iOS momentum
     wheelMultiplier: 0.9,
-    touchMultiplier: 1.8,
+    touchMultiplier: 1.0,
   });
 
-  // Keep ScrollTrigger in sync with Lenis
   lenis.on('scroll', ScrollTrigger.update);
   gsap.ticker.add(time => lenis.raf(time * 1000));
   gsap.ticker.lagSmoothing(0);
@@ -1057,10 +1060,13 @@
   let videoTargetTime   = 0;
   let videoCurrentTime  = 0;
   let videoUnlocked     = false;
-  const LERP = 0.07;
+  let rafFrame          = 0;
 
-  // iOS Safari requires a play() call triggered by a user gesture before
-  // currentTime seeking works. We play → pause on first touch to unlock it.
+  // Smoother on mobile: higher LERP lag, larger seek threshold, every-other-frame seek
+  const LERP      = isMobile ? 0.12 : 0.07;
+  const MIN_DELTA = isMobile ? 0.04 : 0.001;
+
+  // iOS requires play()→pause() from a user gesture to unlock seeking
   function unlockVideo() {
     if (videoUnlocked) return;
     videoUnlocked = true;
@@ -1069,14 +1075,26 @@
       heroVideo.currentTime = videoCurrentTime;
     }).catch(() => {});
   }
-  document.addEventListener('touchstart', unlockVideo, { once: true });
+  document.addEventListener('touchstart', unlockVideo, { once: true, passive: true });
   document.addEventListener('scroll',     unlockVideo, { once: true, passive: true });
 
+  function seekVideo(t) {
+    // fastSeek is less precise but much smoother — ideal for scrubbing
+    if (heroVideo.fastSeek) {
+      heroVideo.fastSeek(t);
+    } else {
+      heroVideo.currentTime = t;
+    }
+  }
+
   function videoLerpLoop() {
+    rafFrame++;
     if (heroVideo.duration && isFinite(videoTargetTime)) {
       videoCurrentTime += (videoTargetTime - videoCurrentTime) * LERP;
-      if (Math.abs(videoCurrentTime - heroVideo.currentTime) > 0.001) {
-        heroVideo.currentTime = videoCurrentTime;
+      const delta = Math.abs(videoCurrentTime - heroVideo.currentTime);
+      // On mobile only seek every other frame to reduce decoder pressure
+      if (delta > MIN_DELTA && (!isMobile || rafFrame % 2 === 0)) {
+        seekVideo(videoCurrentTime);
       }
     }
     requestAnimationFrame(videoLerpLoop);
