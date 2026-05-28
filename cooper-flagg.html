@@ -1068,21 +1068,20 @@
   });
 
   // ── SCROLL-DRIVEN VIDEO ─────────────────────
-  // Uses ScrollTrigger's built-in scrub — handles forward AND reverse
-  // scrubbing natively without a custom rAF loop.
+  // gsap.to() + scrub: the tween's playhead is smoothly animated toward
+  // the scroll position in BOTH directions — forward and reverse.
+  // onUpdate fires on every tween tick (not raw scroll), so seekVideo
+  // always gets the scrubbed, interpolated time value.
   const heroVideo = document.getElementById('hero-video');
   heroVideo.pause();
   heroVideo.currentTime = 0;
 
   let videoUnlocked = false;
 
-  // iOS requires play()→pause() from a user gesture to unlock seeking
   function unlockVideo() {
     if (videoUnlocked) return;
     videoUnlocked = true;
-    heroVideo.play().then(() => {
-      heroVideo.pause();
-    }).catch(() => {});
+    heroVideo.play().then(() => { heroVideo.pause(); }).catch(() => {});
   }
   document.addEventListener('touchstart', unlockVideo, { once: true, passive: true });
   document.addEventListener('scroll',     unlockVideo, { once: true, passive: true });
@@ -1093,18 +1092,19 @@
   }
 
   function setupVideoScrub() {
-    // scrub: 0.5 — ScrollTrigger smoothly chases the scroll position over
-    // 0.5s in both directions. onUpdate fires every tick so forward and
-    // reverse both drive seekVideo correctly.
-    ScrollTrigger.create({
-      trigger: '#hero',
-      start: 'top top',
-      end: 'bottom bottom',
-      scrub: 0.5,
-      invalidateOnRefresh: true,
-      onUpdate: self => {
-        const t = self.progress * heroVideo.duration;
-        if (isFinite(t)) seekVideo(t);
+    const proxy = { t: 0 };
+    gsap.to(proxy, {
+      t: heroVideo.duration,
+      ease: 'none',
+      onUpdate() {
+        if (isFinite(proxy.t)) seekVideo(proxy.t);
+      },
+      scrollTrigger: {
+        trigger: '#hero',
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 0.5,
+        invalidateOnRefresh: true,
       }
     });
   }
