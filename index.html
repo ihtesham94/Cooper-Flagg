@@ -945,11 +945,11 @@
   // ── LENIS SMOOTH SCROLL ─────────────────────
   // Disabled on mobile — iOS native scroll is far smoother for video scrubbing
   const lenis = new Lenis({
-    duration:        isMobile ? 0 : 1.4,
+    duration:        isMobile ? 0 : 0.9,
     easing:          t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     smoothWheel:     !isMobile,
-    smoothTouch:     false,   // never intercept iOS momentum
-    wheelMultiplier: 0.9,
+    smoothTouch:     false,
+    wheelMultiplier: 1.0,
     touchMultiplier: 1.0,
   });
 
@@ -1081,9 +1081,10 @@
   let videoUnlocked     = false;
   let rafFrame          = 0;
 
-  // Smoother on mobile: higher LERP lag, larger seek threshold, every-other-frame seek
-  const LERP      = isMobile ? 0.12 : 0.07;
-  const MIN_DELTA = isMobile ? 0.04 : 0.001;
+  // Single smooth layer — high LERP so video snaps close to scroll immediately
+  // Lenis handles macro smoothness; this loop only fine-tunes the seek position
+  const LERP      = 0.22;
+  const MIN_DELTA = 0.008;
 
   // iOS requires play()→pause() from a user gesture to unlock seeking
   function unlockVideo() {
@@ -1098,7 +1099,6 @@
   document.addEventListener('scroll',     unlockVideo, { once: true, passive: true });
 
   function seekVideo(t) {
-    // fastSeek is less precise but much smoother — ideal for scrubbing
     if (heroVideo.fastSeek) {
       heroVideo.fastSeek(t);
     } else {
@@ -1107,12 +1107,9 @@
   }
 
   function videoLerpLoop() {
-    rafFrame++;
     if (heroVideo.duration && isFinite(videoTargetTime)) {
       videoCurrentTime += (videoTargetTime - videoCurrentTime) * LERP;
-      const delta = Math.abs(videoCurrentTime - heroVideo.currentTime);
-      // On mobile only seek every other frame to reduce decoder pressure
-      if (delta > MIN_DELTA && (!isMobile || rafFrame % 2 === 0)) {
+      if (Math.abs(videoCurrentTime - heroVideo.currentTime) > MIN_DELTA) {
         seekVideo(videoCurrentTime);
       }
     }
