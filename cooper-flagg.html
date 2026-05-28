@@ -71,9 +71,10 @@
       transform: translateY(-12px);
       pointer-events: none;
     }
-    .nav-wordmark { display: flex; align-items: center; flex-shrink: 0; padding: 0 24px 0 8px; }
+    .nav-wordmark { display: flex; align-items: center; flex-shrink: 0; padding: 0 0 0 8px; }
     .nav-wordmark img { height: 16px; width: auto; display: block; opacity: 0.9; }
 
+    .nav-right { display: flex; align-items: center; gap: 4px; }
     .nav-links { display: flex; gap: 2px; }
     .nav-links a {
       font-size: 10.5px; font-weight: 500;
@@ -100,7 +101,7 @@
 
     @media (max-width: 640px) {
       #nav { left: 16px; right: 16px; padding: 7px 7px 7px 10px; }
-      .nav-wordmark { padding: 0 16px 0 4px; }
+      .nav-wordmark { padding: 0 0 0 4px; }
       .nav-wordmark img { height: 14px; }
       .nav-links { display: none; }
       .nav-cta { padding: 9px 16px; font-size: 10px; }
@@ -713,12 +714,14 @@
   <a href="#" class="nav-wordmark">
     <img src="white font CF logo.svg" alt="FLAGG">
   </a>
-  <div class="nav-links">
-    <a href="#timeline">Career</a>
-    <a href="#quote-section">Story</a>
-    <a href="#">Mavericks</a>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a href="#timeline">Career</a>
+      <a href="#quote-section">Story</a>
+      <a href="#">Mavericks</a>
+    </div>
+    <a class="nav-cta" href="#">Contact</a>
   </div>
-  <a class="nav-cta" href="#">Contact</a>
 </nav>
 
 <!-- ── STANDALONE LOGO (post-hero, top-left) -->
@@ -1131,6 +1134,11 @@
   } else {
     heroVideo.addEventListener('loadedmetadata', setupVideoScrub, { once: true });
   }
+
+  // Refresh ScrollTrigger after all assets load to fix mis-calculated positions
+  window.addEventListener('load', () => {
+    setTimeout(() => ScrollTrigger.refresh(), 300);
+  });
 
   // Scroll hint fades on first scroll
   gsap.to('#scrollHint', {
