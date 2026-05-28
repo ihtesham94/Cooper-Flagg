@@ -1093,12 +1093,12 @@
 
   function setupVideoScrub() {
     const proxy = { t: 0 };
+
+    // GSAP tween drives proxy.t smoothly in both directions via scrub.
+    // No onUpdate here — the rAF loop below handles all seeking.
     gsap.to(proxy, {
       t: heroVideo.duration,
       ease: 'none',
-      onUpdate() {
-        if (isFinite(proxy.t)) seekVideo(proxy.t);
-      },
       scrollTrigger: {
         trigger: '#hero',
         start: 'top top',
@@ -1107,6 +1107,19 @@
         invalidateOnRefresh: true,
       }
     });
+
+    // Enforce proxy.t onto the video every single frame.
+    // This catches browser-side currentTime resets (common in Safari/iOS)
+    // that happen when the video scrolls out of view — so re-entering
+    // the hero always shows the correct frame, not frame 0.
+    (function enforceLoop() {
+      if (heroVideo.duration && isFinite(proxy.t)) {
+        if (Math.abs(proxy.t - heroVideo.currentTime) > 0.033) {
+          seekVideo(proxy.t);
+        }
+      }
+      requestAnimationFrame(enforceLoop);
+    })();
   }
 
   if (heroVideo.readyState >= 2) {
