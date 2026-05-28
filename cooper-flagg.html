@@ -54,8 +54,8 @@
       top: 16px;
       left: 24px; right: 24px;
       z-index: 100;
-      display: flex; align-items: center; justify-content: flex-end; gap: 4px;
-      padding: 8px 8px 8px 18px;
+      display: flex; align-items: center; justify-content: space-between; gap: 4px;
+      padding: 8px 8px 8px 14px;
       background: rgba(0, 22, 20, 0.32);
       backdrop-filter: blur(32px) saturate(200%);
       -webkit-backdrop-filter: blur(32px) saturate(200%);
@@ -71,6 +71,9 @@
       transform: translateY(-12px);
       pointer-events: none;
     }
+    .nav-wordmark { display: flex; align-items: center; flex-shrink: 0; }
+    .nav-wordmark img { height: 20px; width: auto; display: block; opacity: 0.9; }
+
     .nav-links { display: flex; gap: 2px; }
     .nav-links a {
       font-size: 10.5px; font-weight: 500;
@@ -699,6 +702,9 @@
 
 <!-- ── NAV PILL (full-width, hero only) ────── -->
 <nav id="nav">
+  <a href="#" class="nav-wordmark">
+    <img src="white font CF logo.svg" alt="FLAGG">
+  </a>
   <div class="nav-links">
     <a href="#timeline">Career</a>
     <a href="#quote-section">Story</a>
@@ -710,7 +716,7 @@
 <!-- ── STANDALONE LOGO (post-hero, top-left) -->
 <div id="nav-logo">
   <a href="#">
-    <img src="CF logo white.svg" alt="Cooper Flagg">
+    <img src="Final CF logo white.svg" alt="FLAGG">
   </a>
 </div>
 
