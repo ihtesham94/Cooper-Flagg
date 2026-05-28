@@ -1068,23 +1068,13 @@
   });
 
   // ── SCROLL-DRIVEN VIDEO ─────────────────────
-  // ScrollTrigger tracks scroll progress → sets targetTime.
-  // A separate rAF loop lerps currentTime toward targetTime
-  // each frame, giving buttery smooth video scrubbing in both
-  // directions regardless of how fast the user scrolls.
+  // Uses ScrollTrigger's built-in scrub — handles forward AND reverse
+  // scrubbing natively without a custom rAF loop.
   const heroVideo = document.getElementById('hero-video');
   heroVideo.pause();
   heroVideo.currentTime = 0;
 
-  let videoTargetTime   = 0;
-  let videoCurrentTime  = 0;
-  let videoUnlocked     = false;
-  let rafFrame          = 0;
-
-  // Single smooth layer — high LERP so video snaps close to scroll immediately
-  // Lenis handles macro smoothness; this loop only fine-tunes the seek position
-  const LERP      = 0.22;
-  const MIN_DELTA = 0.008;
+  let videoUnlocked = false;
 
   // iOS requires play()→pause() from a user gesture to unlock seeking
   function unlockVideo() {
@@ -1092,40 +1082,31 @@
     videoUnlocked = true;
     heroVideo.play().then(() => {
       heroVideo.pause();
-      heroVideo.currentTime = videoCurrentTime;
     }).catch(() => {});
   }
   document.addEventListener('touchstart', unlockVideo, { once: true, passive: true });
   document.addEventListener('scroll',     unlockVideo, { once: true, passive: true });
 
   function seekVideo(t) {
-    if (heroVideo.fastSeek) {
-      heroVideo.fastSeek(t);
-    } else {
-      heroVideo.currentTime = t;
-    }
-  }
-
-  function videoLerpLoop() {
-    if (heroVideo.duration && isFinite(videoTargetTime)) {
-      videoCurrentTime += (videoTargetTime - videoCurrentTime) * LERP;
-      if (Math.abs(videoCurrentTime - heroVideo.currentTime) > MIN_DELTA) {
-        seekVideo(videoCurrentTime);
-      }
-    }
-    requestAnimationFrame(videoLerpLoop);
+    if (heroVideo.fastSeek) heroVideo.fastSeek(t);
+    else heroVideo.currentTime = t;
   }
 
   function setupVideoScrub() {
+    // scrub: 0.5 — ScrollTrigger smoothly chases the scroll position over
+    // 0.5s in both directions. onUpdate fires every tick so forward and
+    // reverse both drive seekVideo correctly.
     ScrollTrigger.create({
       trigger: '#hero',
       start: 'top top',
       end: 'bottom bottom',
+      scrub: 0.5,
+      invalidateOnRefresh: true,
       onUpdate: self => {
-        videoTargetTime = heroVideo.duration * self.progress;
+        const t = self.progress * heroVideo.duration;
+        if (isFinite(t)) seekVideo(t);
       }
     });
-    videoLerpLoop();
   }
 
   if (heroVideo.readyState >= 2) {
