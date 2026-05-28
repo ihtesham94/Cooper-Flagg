@@ -255,10 +255,10 @@
       overflow: hidden;
       display: flex; align-items: flex-end;
     }
-    #hero-video {
+    #hero-video { display: none; }
+    #hero-canvas {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
-      object-fit: cover;
       z-index: 0;
     }
     .hero-overlay {
@@ -739,6 +739,7 @@
   <video id="hero-video" muted playsinline preload="auto" poster="cooper-base.png">
     <source src="hero animation.mp4#t=0.001" type="video/mp4">
   </video>
+  <canvas id="hero-canvas"></canvas>
 
   <div id="hero-grid"></div>
   <div class="hero-overlay"></div>
@@ -1067,66 +1068,69 @@
     }
   });
 
-  // ── SCROLL-DRIVEN VIDEO ─────────────────────
-  // gsap.to() + scrub: the tween's playhead is smoothly animated toward
-  // the scroll position in BOTH directions — forward and reverse.
-  // onUpdate fires on every tween tick (not raw scroll), so seekVideo
-  // always gets the scrubbed, interpolated time value.
-  const heroVideo = document.getElementById('hero-video');
-  heroVideo.pause();
-  heroVideo.currentTime = 0;
+  // ── CANVAS FRAME SEQUENCE ────────────────────
+  // All 121 frames are loaded as Image objects — no video element,
+  // no browser media resets, perfect bidirectional scrubbing.
+  const TOTAL_FRAMES = 121;
+  const frames = new Array(TOTAL_FRAMES).fill(null);
+  const canvas  = document.getElementById('hero-canvas');
+  const ctx     = canvas.getContext('2d');
 
-  let videoUnlocked = false;
+  let targetFrame  = 0;
+  let currentFrame = 0;
 
-  function unlockVideo() {
-    if (videoUnlocked) return;
-    videoUnlocked = true;
-    heroVideo.play().then(() => { heroVideo.pause(); }).catch(() => {});
+  function resizeCanvas() {
+    canvas.width  = window.innerWidth  * window.devicePixelRatio;
+    canvas.height = window.innerHeight * window.devicePixelRatio;
+    canvas.style.width  = window.innerWidth  + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    drawFrameIndex(Math.round(currentFrame));
   }
-  document.addEventListener('touchstart', unlockVideo, { once: true, passive: true });
-  document.addEventListener('scroll',     unlockVideo, { once: true, passive: true });
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
 
-  function seekVideo(t) {
-    if (heroVideo.fastSeek) heroVideo.fastSeek(t);
-    else heroVideo.currentTime = t;
-  }
-
-  function setupVideoScrub() {
-    const proxy = { t: 0 };
-
-    // GSAP tween drives proxy.t smoothly in both directions via scrub.
-    // No onUpdate here — the rAF loop below handles all seeking.
-    gsap.to(proxy, {
-      t: heroVideo.duration,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: '#hero',
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: 0.5,
-        invalidateOnRefresh: true,
-      }
-    });
-
-    // Enforce proxy.t onto the video every single frame.
-    // This catches browser-side currentTime resets (common in Safari/iOS)
-    // that happen when the video scrolls out of view — so re-entering
-    // the hero always shows the correct frame, not frame 0.
-    (function enforceLoop() {
-      if (heroVideo.duration && isFinite(proxy.t)) {
-        if (Math.abs(proxy.t - heroVideo.currentTime) > 0.033) {
-          seekVideo(proxy.t);
-        }
-      }
-      requestAnimationFrame(enforceLoop);
-    })();
+  function drawFrameIndex(i) {
+    const img = frames[Math.max(0, Math.min(TOTAL_FRAMES - 1, i))];
+    if (!img) return;
+    const cw = canvas.width, ch = canvas.height;
+    const fw = img.naturalWidth,  fh = img.naturalHeight;
+    const scale = Math.max(cw / fw, ch / fh);
+    const sw = fw * scale, sh = fh * scale;
+    ctx.drawImage(img, (cw - sw) / 2, (ch - sh) / 2, sw, sh);
   }
 
-  if (heroVideo.readyState >= 2) {
-    setupVideoScrub();
-  } else {
-    heroVideo.addEventListener('loadedmetadata', setupVideoScrub, { once: true });
+  // Preload frames — first frame loads synchronously so canvas shows
+  // immediately; rest load in background.
+  let loaded = 0;
+  function loadFrame(i) {
+    const img = new Image();
+    img.onload = () => {
+      frames[i] = img;
+      loaded++;
+      if (i === 0) drawFrameIndex(0); // show first frame ASAP
+    };
+    img.src = `frames/frame_${String(i + 1).padStart(4, '0')}.jpg`;
   }
+  for (let i = 0; i < TOTAL_FRAMES; i++) loadFrame(i);
+
+  // rAF scrub loop — lerps currentFrame toward targetFrame every tick.
+  // Works perfectly in both directions; no media element to reset.
+  (function scrubLoop() {
+    currentFrame += (targetFrame - currentFrame) * 0.18;
+    drawFrameIndex(Math.round(currentFrame));
+    requestAnimationFrame(scrubLoop);
+  })();
+
+  // ScrollTrigger drives targetFrame based on scroll progress.
+  ScrollTrigger.create({
+    trigger: '#hero',
+    start: 'top top',
+    end: 'bottom bottom',
+    onUpdate:     self => { targetFrame = self.progress * (TOTAL_FRAMES - 1); },
+    onLeave:      ()   => { targetFrame = TOTAL_FRAMES - 1; },
+    onLeaveBack:  ()   => { targetFrame = 0; },
+    onEnterBack:  self => { targetFrame = self.progress * (TOTAL_FRAMES - 1); },
+  });
 
   // Refresh ScrollTrigger after all assets load to fix mis-calculated positions
   window.addEventListener('load', () => {
