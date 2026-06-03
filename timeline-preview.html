@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cooper Flagg — Journey (3D Hallway Preview)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+
+:root{
+  --dark:#002F2C;          /* brand dark green (was absolute black) */
+  --darker:#001A18;        /* deep green (was zinc dark) */
+  --lime:#8CB800;          /* brand lime (was gold #D4AF37) */
+  --light:#F4F4EF;
+  --muted:rgba(244,244,239,0.45);
+  --line:rgba(255,255,255,0.05);
+  --fb:'Inter',system-ui,sans-serif;
+  --fd:'Bebas Neue',sans-serif;
+  --fm:'DM Mono',monospace;
+}
+
+html,body{ height:100%; }
+body{
+  background:var(--dark);
+  color:var(--light);
+  font-family:var(--fb);
+  overflow-x:hidden;
+}
+
+/* Radial gradient backdrop — spec: radial at 50% 40% from lighter green to dark */
+.bg-glow{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:radial-gradient(ellipse 90% 70% at 50% 40%, #0a3b36 0%, var(--dark) 55%, var(--darker) 100%);
+}
+/* Pulsating grid texture — subtle backdrop so it isn't a flat green field */
+.grid-bg{
+  position:fixed; inset:-10%; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(140,184,0,0.11) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(140,184,0,0.11) 1px, transparent 1px);
+  background-size:64px 64px;
+  /* fade the grid out toward the edges so it melts into the gradient */
+  -webkit-mask-image:radial-gradient(ellipse 70% 65% at 50% 45%, #000 0%, transparent 80%);
+  mask-image:radial-gradient(ellipse 70% 65% at 50% 45%, #000 0%, transparent 80%);
+  animation:gridPulse 7s ease-in-out infinite;
+}
+/* second, larger grid drifting the other way for parallax-ish depth */
+.grid-bg.coarse{
+  background-size:160px 160px;
+  background-image:
+    linear-gradient(rgba(140,184,0,0.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(140,184,0,0.10) 1px, transparent 1px);
+  animation:gridPulse2 11s ease-in-out infinite;
+}
+@keyframes gridPulse{
+  0%,100%{ opacity:.35; transform:scale(1); }
+  50%{ opacity:.8; transform:scale(1.015); }
+}
+@keyframes gridPulse2{
+  0%,100%{ opacity:.5; transform:scale(1.02); }
+  50%{ opacity:.18; transform:scale(1); }
+}
+@media (prefers-reduced-motion: reduce){
+  .grid-bg{ animation:none; opacity:.4; }
+}
+
+/* Floor glow — lime tint rising from the bottom */
+.floor-glow{
+  position:fixed; left:0; right:0; bottom:0; height:42vh; z-index:0; pointer-events:none;
+  background:linear-gradient(to top, rgba(140,184,0,0.05), transparent);
+}
+/* Ambient particles */
+.particles{ position:fixed; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+.particle{ position:absolute; width:2px; height:2px; border-radius:50%;
+  background:radial-gradient(circle, rgba(140,184,0,0.6), transparent 70%);
+  opacity:0; animation:float linear infinite; }
+@keyframes float{
+  0%{ transform:translateY(20px); opacity:0; }
+  20%{ opacity:.5; }
+  80%{ opacity:.3; }
+  100%{ transform:translateY(-120px); opacity:0; }
+}
+
+/* ── HEADER OVERLAY ─────────────────────────── */
+.hud{ position:fixed; z-index:30; left:0; right:0; pointer-events:none; }
+.hud-top{ top:0; padding:32px 40px; display:flex; justify-content:space-between; align-items:flex-start; }
+.hud-eyebrow{ font-family:var(--fm); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--lime); }
+.hud-title{ font-family:var(--fd); font-size:clamp(28px,3.4vw,46px); line-height:.95; margin-top:6px; }
+.hud-title em{ font-style:normal; color:var(--lime); }
+.hud-meta{ text-align:right; font-family:var(--fm); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); line-height:1.9; }
+
+/* Scroll hint */
+.scroll-hint{ position:fixed; bottom:26px; left:50%; transform:translateX(-50%); z-index:30;
+  display:flex; flex-direction:column; align-items:center; gap:10px; pointer-events:none; transition:opacity .4s; }
+.scroll-hint span{ font-family:var(--fm); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+.scroll-line{ width:1px; height:38px; background:linear-gradient(to bottom,var(--lime),transparent); animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse{ 0%,100%{opacity:.3;transform:scaleY(.6);transform-origin:top;} 50%{opacity:1;transform:scaleY(1);transform-origin:top;} }
+
+/* Progress rail */
+.prog{ position:fixed; left:40px; top:50%; transform:translateY(-50%); z-index:30; display:flex; flex-direction:column; gap:14px; pointer-events:none; }
+.prog-dot{ width:7px; height:7px; border-radius:50%; border:1px solid rgba(140,184,0,.35); background:transparent; transition:background .3s, transform .3s; }
+.prog-dot.active{ background:var(--lime); transform:scale(1.4); box-shadow:0 0 12px rgba(140,184,0,.5); }
+@media(max-width:700px){ .prog{display:none;} .hud-meta{display:none;} }
+
+/* ── 3D SCENE ───────────────────────────────── */
+#scroll-space{ position:relative; height:900vh; z-index:2; }
+#viewport{
+  position:fixed; inset:0; z-index:2;
+  perspective:3000px; perspective-origin:50% 50%;
+  overflow:hidden;
+}
+#hallway{
+  position:absolute; inset:0;
+  transform-style:preserve-3d;
+  will-change:transform;
+}
+
+/* Art frame */
+.frame{
+  position:absolute; top:50%; margin-top:-205px;   /* vertically centred (half of height) */
+  width:290px; height:410px;
+  border:1px solid var(--line);
+  border-radius:4px; overflow:hidden;
+  background:var(--darker);
+  transform-style:preserve-3d;
+  transition:filter .4s ease, box-shadow .4s ease;
+  cursor:pointer;
+  box-shadow:0 4px 60px rgba(0,0,0,0.9);
+}
+.frame.left{ left:28%; }
+.frame.right{ right:28%; }
+.frame img{
+  width:100%; height:100%; object-fit:cover; opacity:.82;
+  transition:transform .5s ease, opacity .4s ease; display:block;
+}
+.frame:hover{ filter:brightness(1.35); box-shadow:0 0 40px rgba(140,184,0,0.18), 0 4px 60px rgba(0,0,0,0.9); border-color:rgba(140,184,0,.3); }
+.frame:hover img{ transform:scale(1.04); opacity:1; }
+
+/* gradient + label baked onto frame */
+.frame::after{ content:''; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(to top, rgba(0,26,24,0.92) 0%, rgba(0,26,24,0.1) 45%, transparent 70%); }
+.frame-label{ position:absolute; left:18px; right:18px; bottom:18px; z-index:2; }
+.frame-yr{ display:inline-block; font-family:var(--fm); font-size:10px; font-weight:600; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--lime); background:rgba(140,184,0,0.1); border:1px solid rgba(140,184,0,0.2); padding:4px 9px; border-radius:100px; margin-bottom:10px; }
+.frame-ttl{ font-family:var(--fd); font-size:24px; line-height:.98; letter-spacing:.02em; }
+.frame-hint{ margin-top:8px; font-family:var(--fm); font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); opacity:0; transition:opacity .3s; }
+.frame:hover .frame-hint{ opacity:1; }
+
+/* ── MOBILE: VERTICAL JOURNEY SPINE ─────────── */
+#mobile-timeline{ display:none; }
+@media (max-width:768px){
+  #viewport, #scroll-space, .prog, .scroll-hint{ display:none !important; }
+  #mobile-timeline{ display:block; position:relative; z-index:2; padding:128px 0 40px; }
+  .hud-top{ padding:24px 22px; }
+  .hud-title{ font-size:30px; }
+}
+
+.mt-spine{
+  position:absolute; left:31px; top:128px; bottom:120px; width:2px;
+  background:rgba(140,184,0,0.14); border-radius:2px; overflow:hidden;
+}
+.mt-fill{
+  position:absolute; left:0; top:0; width:100%; height:0;
+  background:linear-gradient(to bottom, var(--lime), rgba(140,184,0,0.4));
+  box-shadow:0 0 14px rgba(140,184,0,0.6); border-radius:2px;
+  transition:height .12s linear;
+}
+.mt-list{ position:relative; }
+.mt-item{ position:relative; padding:0 22px 56px 62px; perspective:900px; }
+.mt-item:last-child{ padding-bottom:34px; }
+.mt-node{
+  position:absolute; left:24px; top:6px; width:16px; height:16px; border-radius:50%;
+  background:var(--dark); border:2px solid rgba(140,184,0,0.4); z-index:3;
+  transition:border-color .4s ease, background .4s ease, box-shadow .4s ease;
+}
+.mt-item.in .mt-node{ border-color:var(--lime); background:var(--lime); box-shadow:0 0 16px rgba(140,184,0,0.7); }
+
+.mt-card{
+  border:1px solid var(--line); border-radius:14px; overflow:hidden;
+  background:rgba(0,26,24,0.6); cursor:pointer;
+  box-shadow:0 18px 50px rgba(0,0,0,0.55);
+  opacity:0; transform:translateY(46px) rotateX(14deg); transform-origin:top center;
+  transition:opacity .7s cubic-bezier(0.16,1,0.3,1), transform .8s cubic-bezier(0.16,1,0.3,1);
+}
+.mt-item.tilt-r .mt-card{ transform:translateY(46px) rotateX(14deg) rotateY(-9deg); }
+.mt-item.in .mt-card{ opacity:1; transform:translateY(0) rotateX(0) rotateY(0); }
+.mt-card:active{ filter:brightness(1.2); }
+.mt-card-media{ position:relative; height:230px; overflow:hidden; }
+.mt-card-media img{ width:100%; height:100%; object-fit:cover; display:block; opacity:.9;
+  transform:scale(1.06); transition:transform 1s cubic-bezier(0.16,1,0.3,1); }
+.mt-item.in .mt-card-media img{ transform:scale(1); }
+.mt-card-media::after{ content:''; position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(0,26,24,0.96) 4%, rgba(0,26,24,0.15) 45%, transparent 75%); }
+.mt-card-badge{ position:absolute; top:14px; left:14px; z-index:2;
+  font-family:var(--fm); font-size:10px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--lime); background:rgba(0,26,24,0.7); border:1px solid rgba(140,184,0,0.25);
+  padding:5px 11px; border-radius:100px; backdrop-filter:blur(8px); }
+.mt-card-body{ position:relative; padding:0 20px 22px; margin-top:-46px; z-index:2; }
+.mt-card-ttl{ font-family:var(--fd); font-size:34px; line-height:.95; letter-spacing:.02em; margin-bottom:14px; }
+.mt-card-ttl em{ font-style:normal; color:var(--lime); }
+.mt-card-stats{ display:flex; gap:22px; flex-wrap:wrap; margin-bottom:14px; }
+.mt-card-stats .n{ font-family:var(--fd); font-size:26px; color:var(--lime); line-height:1; }
+.mt-card-stats .l{ font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:3px; }
+.mt-card-hint{ font-family:var(--fm); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.mt-end{ text-align:center; padding:40px 24px 24px; }
+.mt-end .e-eyebrow{ font-family:var(--fm); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime); margin-bottom:14px; }
+.mt-end .e-h{ font-family:var(--fd); font-size:64px; line-height:.9; }
+.mt-end .e-h em{ font-style:normal; color:var(--lime); }
+.mt-end .e-p{ margin-top:14px; font-size:13px; font-weight:300; color:var(--muted); line-height:1.7; }
+
+/* ── FRAME SIDE INFO (desktop, reads beside the card) ─ */
+.frame-info{
+  position:absolute; top:50%; margin-top:-205px;   /* top flush with card top */
+  transform-style:preserve-3d; pointer-events:none;
+  hyphens:none;
+}
+/* Text sits OUTBOARD and hugs its card — left panel right-aligned toward
+   the card, right panel left-aligned toward the card */
+.frame-info.left{  left:3%; right:75.5%; text-align:right; }
+.frame-info.right{ right:3%; left:75.5%; text-align:left; }
+.frame-info.left .fi-title,
+.frame-info.left .fi-body{ margin-left:auto; }   /* push the measure to the card edge */
+.frame-info.left .fi-stats{ justify-content:flex-end; }
+.fi-badge{ display:inline-block; font-family:var(--fm); font-size:10px; font-weight:600;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--lime);
+  background:rgba(140,184,0,0.1); border:1px solid rgba(140,184,0,0.22);
+  padding:5px 11px; border-radius:100px; margin-bottom:20px; }
+.fi-title{ font-family:var(--fd); font-size:42px; line-height:.96; letter-spacing:.02em;
+  margin-bottom:18px; text-wrap:balance; max-width:12ch; }
+.fi-title em{ font-style:normal; color:var(--lime); }
+.fi-body{ font-size:14px; font-weight:300; line-height:1.72; color:rgba(244,244,239,.62);
+  margin-bottom:24px; max-width:34ch; text-wrap:pretty; }
+.fi-body strong{ color:var(--light); font-weight:500; }
+.fi-body .nb{ white-space:nowrap; }
+.fi-stats{ display:flex; gap:28px; }
+.fi-stats .n{ font-family:var(--fd); font-size:30px; color:var(--lime); line-height:1; }
+.fi-stats .l{ font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:3px; }
+@media (max-width:980px){ .frame-info{ display:none; } }  /* hidden when corridor gets tight */
+
+/* ── MODAL (PIP) ────────────────────────────── */
+#modal{ position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center; padding:24px;
+  background:rgba(0,10,9,0.9); backdrop-filter:blur(40px); -webkit-backdrop-filter:blur(40px);
+  opacity:0; pointer-events:none; transition:opacity .35s ease; }
+#modal.open{ opacity:1; pointer-events:auto; }
+.modal-card{
+  width:100%; max-width:880px; max-height:88vh; overflow-y:auto;
+  background:rgba(0,26,24,0.96); border:1px solid rgba(140,184,0,0.18); border-radius:14px;
+  padding:48px; transform:translateY(30px) scale(.96); transition:transform .4s cubic-bezier(0.16,1,0.3,1);
+}
+#modal.open .modal-card{ transform:translateY(0) scale(1); }
+.modal-badge{ display:inline-block; font-family:var(--fm); font-size:11px; font-weight:600; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--lime); background:rgba(140,184,0,0.1); border:1px solid rgba(140,184,0,0.2); padding:5px 12px; border-radius:100px; margin-bottom:24px; }
+.modal-title{ font-family:var(--fd); font-size:clamp(38px,5.5vw,68px); line-height:.95; margin-bottom:20px; }
+.modal-title em{ font-style:normal; color:var(--lime); }
+.modal-body{ font-size:15px; font-weight:300; line-height:1.85; color:rgba(244,244,239,.66); max-width:600px; margin-bottom:32px; }
+.modal-body strong{ color:var(--light); font-weight:500; }
+.modal-gallery{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.modal-gallery.single{ grid-template-columns:1fr; }
+.modal-gallery img{ width:100%; height:220px; object-fit:cover; border-radius:12px; border:1px solid var(--line); }
+.modal-gallery.single img{ height:340px; }
+.modal-stats{ display:flex; gap:32px; flex-wrap:wrap; margin:0 0 32px; }
+.modal-stat .n{ font-family:var(--fd); font-size:38px; color:var(--lime); line-height:1; }
+.modal-stat .l{ font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:4px; }
+.modal-close{ position:absolute; top:24px; right:28px; z-index:61; background:none; border:1px solid rgba(255,255,255,.12);
+  color:var(--light); width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:18px; line-height:1; transition:border-color .2s, background .2s; }
+.modal-close:hover{ border-color:var(--lime); background:rgba(140,184,0,.1); }
+@media(max-width:640px){ .modal-card{padding:32px 24px;} .modal-gallery{grid-template-columns:1fr;} .modal-gallery img{height:180px;} }
+
+/* end cap */
+.endcap{ position:absolute; top:50%; left:50%; width:560px; max-width:80vw; text-align:center; }
+.endcap .e-eyebrow{ font-family:var(--fm); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--lime); margin-bottom:16px; }
+.endcap .e-h{ font-family:var(--fd); font-size:clamp(48px,8vw,110px); line-height:.9; }
+.endcap .e-h em{ font-style:normal; color:var(--lime); }
+.endcap .e-p{ margin-top:18px; font-size:14px; font-weight:300; color:var(--muted); line-height:1.7; }
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+<div class="grid-bg coarse"></div>
+<div class="grid-bg"></div>
+<div class="floor-glow"></div>
+<div class="particles" id="particles"></div>
+
+<!-- HUD -->
+<div class="hud hud-top">
+  <div>
+    <div class="hud-eyebrow">The Journey</div>
+    <div class="hud-title">From Pine to <em>Parquet</em></div>
+  </div>
+  <div class="hud-meta">Newport, ME → Dallas, TX<br>2006–2026</div>
+</div>
+
+<div class="prog" id="prog"></div>
+
+<div class="scroll-hint" id="scrollHint">
+  <div class="scroll-line"></div>
+  <span>Scroll to walk through</span>
+</div>
+
+<!-- MOBILE: VERTICAL JOURNEY SPINE -->
+<div id="mobile-timeline">
+  <div class="mt-spine"><div class="mt-fill" id="mtFill"></div></div>
+  <div class="mt-list" id="mtList"></div>
+  <div class="mt-end">
+    <div class="e-eyebrow">2026 · The North Star Arrives</div>
+    <div class="e-h">DIRIGO.<br><em>I lead.</em></div>
+    <div class="e-p">From the smallest town in Maine to the biggest stage in basketball.</div>
+  </div>
+</div>
+
+<!-- 3D SCENE -->
+<div id="viewport">
+  <div id="hallway"></div>
+</div>
+<div id="scroll-space"></div>
+
+<!-- MODAL -->
+<div id="modal">
+  <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+  <div class="modal-card" id="modalCard"></div>
+</div>
+
+<script>
+/* Always start at the top — don't let the browser restore scroll position,
+   otherwise the scroll-driven scene loads at the end (the "Dirigo" cap). */
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.scrollTo(0, 0);
+window.addEventListener('load', () => window.scrollTo(0, 0));
+window.addEventListener('pageshow', () => window.scrollTo(0, 0));
+
+/* ── MILESTONE DATA (accurate, sourced) ─────────────────────────
+   img → drop real photos into journey/ with these filenames.
+   Until a file exists, an onerror handler shows a placeholder render. */
+const PLACEHOLDER = 'cooper-base.png';
+const MILESTONES = [
+  {
+    img:'journey/01-newport.jpg', year:'2006', short:'Born in\nNewport, ME',
+    title:'Born of <em>basketball</em>', badge:'2006 · Newport, Maine',
+    body:'Cooper Flagg was born December 21, 2006 in Newport, Maine, to Ralph and Kelly Flagg, both former Maine basketball players. His twin brother <strong>Ace</strong> became his first real rival in the backyard. Older brother Hunter went on to play at the University of Maine.',
+    stats:[['~3,000','Town population'],['Dec 21','Birthday, 2006']]
+  },
+  {
+    img:'journey/02-nokomis.jpg', year:'2021–22', short:'State champ\nat fifteen',
+    title:'State champion <em>at fifteen</em>', badge:'2021–22 · Nokomis Regional',
+    body:'As a freshman, Flagg played alongside twin brother Ace at <strong>Nokomis Regional High</strong> and led the Warriors to their first state championship in school history. It was the last season Maine would have him to itself.',
+    stats:[['1st','State title in school history'],['9th','Starting grade']]
+  },
+  {
+    img:'journey/03-montverde.jpg', year:'2022–24', short:'The #1\nrecruit',
+    title:'The <em>#1</em> recruit', badge:'2022–24 · Montverde Academy, FL',
+    body:'The twins transferred to <strong>Montverde Academy</strong> in Florida, the country’s premier basketball program, where Cooper became the consensus number-one recruit in his class. He then reclassified up a year, accelerating an already impossible timeline.',
+    stats:[['#1','Recruit in his class'],['+1','Reclassified a year up']]
+  },
+  {
+    img:'journey/04-duke.jpg', year:'2024–25', short:'Player of\nthe Year',
+    title:'National <em>Player of the Year</em>', badge:'2024–25 · Duke Blue Devils',
+    body:'One season in Durham was all it took. As a freshman, Flagg swept the major national Player of the Year awards and led Duke to a <strong class="nb">35–4</strong> record and the Final Four. He joined Kevin Durant, Anthony Davis and Zion Williamson as the only freshmen ever to sweep both player and freshman of the year.',
+    stats:[['19.2','PPG'],['7.5','RPG'],['48.1%','FG%']]
+  },
+  {
+    img:'journey/05-finalfour.jpg', year:'April 2025', short:'27 in the\nFinal Four',
+    title:'<em>27</em> in the Final Four', badge:'April 2025 · Final Four',
+    body:'In the national semifinal, Flagg poured in <strong>27 points</strong> with 7 rebounds and 3 blocks against Houston, but Duke fell <strong class="nb">70–67</strong>. It was the last college game he would ever play.',
+    stats:[['27','Points'],['7','Rebounds'],['3','Blocks']]
+  },
+  {
+    img:'journey/06-draft.jpg', year:'June 2025', short:'#1 Overall\nPick',
+    title:'The <em>first</em> pick', badge:'June 25, 2025 · NBA Draft',
+    body:'Dallas entered the lottery with just a <strong>1.8% chance</strong> at the top pick, and won it anyway. On June 25, 2025, the Mavericks made Cooper Flagg the first overall selection of the 2025 NBA Draft, the 5th Duke player taken number one in the lottery era.',
+    stats:[['1.8%','Lottery odds'],['#1','Overall pick'],['#32','Jersey number']]
+  },
+  {
+    img:'journey/07-mavericks.jpg', year:'2025–26', short:'Dallas\nMavericks',
+    title:'Led the team in <em>everything</em>', badge:'2025–26 · Rookie Season',
+    body:'In 70 starts, Flagg led Dallas in total points (1,473), rebounds (466), assists (316) and steals (84). He was the only player in the NBA to lead his team in all four, and just the second rookie ever to do it, after Michael Jordan.',
+    stats:[['21.0','PPG'],['6.7','RPG'],['4.5','APG']]
+  },
+  {
+    img:'journey/08-roy.jpg', year:'2026', short:'Rookie of\nthe Year',
+    title:'<em>Rookie of the Year</em>', badge:'April 2026 · The North Star Arrives',
+    body:'Flagg took home the Kia NBA Rookie of the Year with <strong>56 of 100 first-place votes</strong> and 412 total points, edging Charlotte’s Kon Knueppel. He became the third Maverick ever to win it, after Jason Kidd and Luka Dončić.',
+    stats:[['56','First-place votes'],['412','Award points'],['3rd','Maverick to win']]
+  }
+];
+// Auto-assign hallway sides (alternating) and a gallery fallback
+MILESTONES.forEach((m,i)=>{ m.side = i % 2 ? 'right' : 'left'; if(!m.gallery) m.gallery=[m.img]; });
+
+const Z_GAP   = 700;                        // spacing per station along Z
+const FIRST_Z = -300;                       // first frame slightly ahead
+const END_GAP = 820;                        // gap between last frame and end cap
+const endZ    = FIRST_Z - (MILESTONES.length - 1) * Z_GAP - END_GAP;
+// Travel so the end cap lands at a readable, centred distance from the camera
+const MAX_Z   = -endZ - 280;
+
+const depthEls = []; // {el, z} for opacity/fade work
+
+/* ── BUILD FRAMES ───────────────────────────── */
+const hallway = document.getElementById('hallway');
+MILESTONES.forEach((m, i) => {
+  const z = FIRST_Z - i * Z_GAP;
+  const rot = m.side === 'left' ? 24 : -24;
+  const el = document.createElement('div');
+  el.className = `frame ${m.side}`;
+  el.style.transform = `translateZ(${z}px) rotateY(${rot}deg)`;
+  el.dataset.index = i;
+  el.innerHTML = `
+    <img src="${m.img}" alt="" onerror="this.onerror=null;this.src='${PLACEHOLDER}'">
+    <div class="frame-label">
+      <span class="frame-yr">${m.year}</span>
+      <div class="frame-ttl">${m.short.replace(/\n/g,'<br>')}</div>
+    </div>`;
+  el.addEventListener('click', () => openModal(i));
+  hallway.appendChild(el);
+  depthEls.push({ el, z, frame:true, dir: m.side === 'left' ? 1 : -1 });
+
+  // Side info panel — reads beside the card at the same depth, fades with it
+  const stats = m.stats.map(s => `<div><span class="n">${s[0]}</span><div class="l">${s[1]}</div></div>`).join('');
+  const info = document.createElement('div');
+  info.className = `frame-info ${m.side}`;
+  info.style.transform = `translateZ(${z}px)`;
+  info.innerHTML = `
+    <span class="fi-badge">${m.badge}</span>
+    <div class="fi-title">${m.title}</div>
+    <div class="fi-body">${m.body}</div>
+    <div class="fi-stats">${stats}</div>`;
+  hallway.appendChild(info);
+  depthEls.push({ el: info, z, info:true });
+});
+
+/* End cap after the last frame */
+const endcap = document.createElement('div');
+endcap.className = 'endcap';
+endcap.style.transform = `translate(-50%,-50%) translateZ(${endZ}px)`;
+endcap.innerHTML = `
+  <div class="e-eyebrow">2026 · The North Star Arrives</div>
+  <div class="e-h">DIRIGO.<br><em>I lead.</em></div>
+  <div class="e-p">From the smallest town in Maine to the biggest stage in basketball.</div>`;
+hallway.appendChild(endcap);
+depthEls.push({ el: endcap, z: endZ, isCap:true });
+
+/* ── PROGRESS DOTS ──────────────────────────── */
+const progEl = document.getElementById('prog');
+MILESTONES.forEach(() => { const d=document.createElement('div'); d.className='prog-dot'; progEl.appendChild(d); });
+const progDots = [...progEl.children];
+
+function clamp(v,a,b){ return Math.min(b, Math.max(a, v)); }
+const IS_MOBILE = window.matchMedia('(max-width:768px)').matches;
+
+/* ── DESKTOP: SCROLL → Z TRANSFORM (lerped) ──── */
+if(!IS_MOBILE){
+  const scrollSpace = document.getElementById('scroll-space');
+  const scrollHint  = document.getElementById('scrollHint');
+  let targetZ = 0, currentZ = 0;
+
+  // Depth "stops" — one per card (focal currentZ = i * Z_GAP), plus the end cap.
+  const stops = MILESTONES.map((_, i) => i * Z_GAP);
+  stops.push(MAX_Z);
+  const segments = stops.length - 1;
+
+  // Smootherstep — eases out at the start AND end of each segment, so the
+  // camera settles on a card for a beat before taking off to the next.
+  const smoother = t => t * t * t * (t * (t * 6 - 15) + 10);
+
+  function onScroll(){
+    const max = scrollSpace.offsetHeight - window.innerHeight;
+    const progress = Math.min(1, Math.max(0, window.scrollY / max));
+    scrollHint.style.opacity = progress > 0.02 ? '0' : '1';
+
+    const seg  = Math.min(segments - 0.0001, progress * segments);
+    const i    = Math.floor(seg);
+    const frac = smoother(seg - i);
+    targetZ = stops[i] + (stops[i + 1] - stops[i]) * frac;
+
+    const station = Math.round((targetZ + FIRST_Z*-1) / Z_GAP);
+    progDots.forEach((d,k)=> d.classList.toggle('active', k === Math.min(MILESTONES.length-1, Math.max(0, station))));
+  }
+  window.addEventListener('scroll', onScroll, { passive:true });
+  onScroll();
+
+  (function loop(){
+    currentZ += (targetZ - currentZ) * 0.08;
+    hallway.style.transform = `translateZ(${currentZ}px)`;
+    for(const d of depthEls){
+      const eff = d.z + currentZ;
+      let o;
+      if(d.info){
+        // Text only shows for the card currently near the focal plane,
+        // so panels never stack on top of each other.
+        const FOCAL = -300, RANGE = 300;
+        o = clamp(1 - Math.abs(eff - FOCAL) / RANGE, 0, 1);
+      } else if(d.isCap){
+        // End cap fades in only right at the finish, after the last card has passed
+        o = Math.min(clamp((40 - eff) / 320, 0, 1), clamp((eff + 750) / 520, 0, 1));
+      } else {
+        const nearFade = clamp((40 - eff) / 320, 0, 1);
+        const farFade  = clamp((eff + 3600) / 700, 0, 1);
+        o = Math.min(nearFade, farFade);
+      }
+      d.el.style.opacity = o.toFixed(3);
+      if(!d.info) d.el.style.pointerEvents = o < 0.15 ? 'none' : 'auto';
+
+      // Cards turn to face the viewer as they reach their reading position,
+      // then angle back inward as they pass.
+      if(d.frame){
+        const FOCAL = -300, SPAN = 700, STEEP = 36, FLAT = 8;
+        const prox = clamp(1 - Math.abs(eff - FOCAL) / SPAN, 0, 1);
+        const ang = (STEEP - prox * (STEEP - FLAT)) * d.dir;
+        d.el.style.transform = `translateZ(${d.z}px) rotateY(${ang.toFixed(2)}deg)`;
+      }
+    }
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* ── MOBILE: VERTICAL JOURNEY SPINE ─────────── */
+const mtList = document.getElementById('mtList');
+MILESTONES.forEach((m, i) => {
+  const stats = m.stats.map(s => `<div><span class="n">${s[0]}</span><div class="l">${s[1]}</div></div>`).join('');
+  const item = document.createElement('div');
+  item.className = 'mt-item' + (i % 2 ? ' tilt-r' : '');
+  item.innerHTML = `
+    <div class="mt-node"></div>
+    <div class="mt-card" data-index="${i}">
+      <div class="mt-card-media">
+        <span class="mt-card-badge">${m.year}</span>
+        <img src="${m.img}" alt="" onerror="this.onerror=null;this.src='${PLACEHOLDER}'">
+      </div>
+      <div class="mt-card-body">
+        <div class="mt-card-ttl">${m.short.replace(/\n/g,'<br>')}</div>
+        <div class="mt-card-stats">${stats}</div>
+        <div class="mt-card-hint">Tap to open ↗</div>
+      </div>
+    </div>`;
+  item.querySelector('.mt-card').addEventListener('click', () => openModal(i));
+  mtList.appendChild(item);
+});
+
+if(IS_MOBILE){
+  const items = [...document.querySelectorAll('.mt-item')];
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('in'); });
+  }, { threshold:0.25, rootMargin:'0px 0px -12% 0px' });
+  items.forEach(it => io.observe(it));
+
+  // Glowing trail fills as you scroll past the nodes
+  const spine = document.querySelector('.mt-spine');
+  const mtFill = document.getElementById('mtFill');
+  function fillTrail(){
+    const r = spine.getBoundingClientRect();
+    const mark = window.innerHeight * 0.45;           // fill up to ~45% down the screen
+    const h = clamp(mark - r.top, 0, r.height);
+    mtFill.style.height = h + 'px';
+  }
+  window.addEventListener('scroll', fillTrail, { passive:true });
+  window.addEventListener('resize', fillTrail);
+  fillTrail();
+}
+
+/* ── MODAL ──────────────────────────────────── */
+const modal = document.getElementById('modal');
+const modalCard = document.getElementById('modalCard');
+document.getElementById('modalClose').addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if(e.target === modal) closeModal(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+
+function openModal(i){
+  const m = MILESTONES[i];
+  const stats = m.stats.map(s => `<div class="modal-stat"><div class="n">${s[0]}</div><div class="l">${s[1]}</div></div>`).join('');
+  const gallery = m.gallery.map(g => `<img src="${g}" alt="" onerror="this.onerror=null;this.src='${PLACEHOLDER}'">`).join('');
+  const galleryClass = m.gallery.length < 2 ? 'modal-gallery single' : 'modal-gallery';
+  modalCard.innerHTML = `
+    <span class="modal-badge">${m.badge}</span>
+    <h2 class="modal-title">${m.title}</h2>
+    <div class="modal-stats">${stats}</div>
+    <p class="modal-body">${m.body}</p>
+    <div class="${galleryClass}">${gallery}</div>`;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(){ modal.classList.remove('open'); document.body.style.overflow=''; }
+
+/* ── PARTICLES ──────────────────────────────── */
+const pc = document.getElementById('particles');
+for(let i=0;i<28;i++){
+  const p=document.createElement('div'); p.className='particle';
+  p.style.left = Math.random()*100+'%';
+  p.style.top  = Math.random()*100+'%';
+  const s = 1 + Math.random()*2; p.style.width=s+'px'; p.style.height=s+'px';
+  p.style.animationDuration = (6 + Math.random()*8)+'s';
+  p.style.animationDelay = (-Math.random()*8)+'s';
+  if(Math.random()>0.6) p.style.background='radial-gradient(circle, rgba(244,244,239,0.5), transparent 70%)';
+  pc.appendChild(p);
+}
+</script>
+</body>
+</html>
