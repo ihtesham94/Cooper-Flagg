@@ -155,7 +155,10 @@ body{
 #mobile-timeline{ display:none; }
 @media (max-width:768px){
   #viewport, #scroll-space, .prog, .scroll-hint{ display:none !important; }
-  #mobile-timeline{ display:block; position:relative; z-index:2; padding:128px 0 40px; }
+  /* Header scrolls away with the page on mobile (it's a normal vertical
+     scroll here) so cards never slide under a pinned title. */
+  .hud{ position:absolute; }
+  #mobile-timeline{ display:block; position:relative; z-index:2; padding:150px 0 40px; }
   .hud-top{ padding:24px 22px; }
   .hud-title{ font-size:30px; }
 }
@@ -291,7 +294,7 @@ body{
 <div class="hud hud-top">
   <div>
     <div class="hud-eyebrow">The Journey</div>
-    <div class="hud-title">From Pine to <em>Parquet</em></div>
+    <div class="hud-title">Newport to the <em>NBA</em></div>
   </div>
   <div class="hud-meta">Newport, ME → Dallas, TX<br>2006–2026</div>
 </div>
