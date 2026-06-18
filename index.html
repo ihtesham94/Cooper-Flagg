@@ -1632,36 +1632,32 @@
 
   const LERP = isMobile ? 1 : 0.18;   // mobile: map frame directly to scroll (glued, no catch-up lag)
 
-  (function scrubLoop() {
-    currentFrame += (targetFrame - currentFrame) * LERP;
-    drawFrameIndex(Math.round(currentFrame));
-    requestAnimationFrame(scrubLoop);
-  })();
-
   // ── ARENA AMBIENCE ───────────────────────────
   const arena     = document.getElementById('arenaAudio');
   const soundBtn  = document.getElementById('soundToggle');
+  const heroEl    = document.getElementById('hero');
   const MAX_VOL   = 0.18;
   let audioStarted = false;
   let soundOn      = true;
-  let heroProgress = 0;
 
-  function heroVol() {
-    // smooth (cosine) fade-out that completes well before the hero ends, so it doesn't linger
-    const A = 0.1, B = 0.7;   // full until 10% through, fully silent by 70%
+  // Volume is recomputed from the LIVE hero scroll position every frame (in the scrub loop below),
+  // so it is guaranteed to be silent past the hero and to fade back in when scrolling up.
+  function updateArenaVolume() {
+    if (!arena || !audioStarted) return;
+    const total = heroEl.offsetHeight - window.innerHeight;
+    const p = total > 0 ? Math.min(1, Math.max(0, -heroEl.getBoundingClientRect().top / total)) : 0;
     let f;
-    if (heroProgress <= A) f = 1;
-    else if (heroProgress >= B) f = 0;
-    else { const t = (heroProgress - A) / (B - A); f = Math.cos(t * Math.PI / 2); }
-    return soundOn ? MAX_VOL * f : 0;
+    if (p <= 0.1) f = 1;
+    else if (p >= 0.7) f = 0;                                       // fully silent at ~70% of the hero
+    else { const t = (p - 0.1) / 0.6; f = Math.cos(t * Math.PI / 2); }   // smooth cosine fade
+    arena.volume = soundOn ? MAX_VOL * f : 0;
   }
   function startAudio() {
     if (audioStarted || !arena) return;
     arena.volume = 0;
-    const p = arena.play();
-    if (p) p.then(() => { audioStarted = true; arena.volume = heroVol(); }).catch(() => {});
+    const pr = arena.play();
+    if (pr) pr.then(() => { audioStarted = true; }).catch(() => {});
   }
-  // browsers need a gesture before sound — start on the first interaction
   ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev =>
     window.addEventListener(ev, startAudio, { once: true, passive: true }));
   if (soundBtn) {
@@ -1669,22 +1665,26 @@
     soundBtn.addEventListener('click', () => {
       soundOn = !soundOn;
       soundBtn.classList.toggle('muted', !soundOn);
-      if (soundOn) { startAudio(); if (audioStarted) arena.play().catch(() => {}); }
-      if (arena) arena.volume = heroVol();
+      if (soundOn) startAudio();
     });
   }
+
+  (function scrubLoop() {
+    currentFrame += (targetFrame - currentFrame) * LERP;
+    drawFrameIndex(Math.round(currentFrame));
+    updateArenaVolume();
+    requestAnimationFrame(scrubLoop);
+  })();
 
   ScrollTrigger.create({
     trigger: '#hero',
     start: 'top top',
     end: 'bottom bottom',
-    onUpdate:    self => { targetFrame = self.progress * (COUNT - 1);
-                           heroProgress = self.progress; if (arena && audioStarted) arena.volume = heroVol(); },
-    onLeave:     ()   => { targetFrame = COUNT - 1; if (arena) arena.volume = 0;   // silent, but keep playing so it can fade back in
-                           if (soundBtn) soundBtn.classList.remove('show'); },
+    onUpdate:    self => { targetFrame = self.progress * (COUNT - 1); },
+    onLeave:     ()   => { targetFrame = COUNT - 1; if (soundBtn) soundBtn.classList.remove('show'); },
     onLeaveBack: ()   => { targetFrame = 0; },
     onEnterBack: self => { targetFrame = self.progress * (COUNT - 1);
-                           if (arena && audioStarted && soundOn) { arena.play().catch(() => {}); arena.volume = heroVol(); }
+                           if (arena && audioStarted && soundOn) arena.play().catch(() => {});
                            if (soundBtn) soundBtn.classList.add('show'); },
   });
 
