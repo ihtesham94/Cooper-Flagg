@@ -1633,20 +1633,21 @@
   const LERP = isMobile ? 1 : 0.18;   // mobile: map frame directly to scroll (glued, no catch-up lag)
 
   // ── ARENA AMBIENCE ───────────────────────────
-  // NOTE: iOS Safari ignores audio.volume entirely, so we route through the Web Audio API
-  // and control a GainNode — that IS respected on iOS, so the fade actually works on iPhone.
-  const arena     = document.getElementById('arenaAudio');
+  // iOS ignores audio.volume AND outputs silence when an <audio> is routed via Web Audio.
+  // So we decode the file into a buffer and play it through a GainNode — gain is fully
+  // respected on iPhone, so the scroll-driven fade actually works.
   const soundBtn  = document.getElementById('soundToggle');
   const heroEl    = document.getElementById('hero');
   const MAX_VOL   = 0.18;
-  let audioStarted = false;
-  let soundOn      = true;
+  let soundOn    = true;
+  let audioReady = false;   // buffer is decoded and playing through the gain node
+  let starting   = false;
   let audioCtx = null, gainNode = null;
 
   // Volume recomputed from the LIVE hero scroll position every frame (in the scrub loop below):
   // full early, smooth fade, fully silent by ~70% of the hero — and silent everywhere after it.
   function updateArenaVolume() {
-    if (!audioStarted || !gainNode) return;
+    if (!audioReady || !gainNode) return;
     const total = heroEl.offsetHeight - window.innerHeight;
     const p = total > 0 ? Math.min(1, Math.max(0, -heroEl.getBoundingClientRect().top / total)) : 0;
     let f;
@@ -1655,29 +1656,36 @@
     else { const t = (p - 0.1) / 0.6; f = Math.cos(t * Math.PI / 2); }
     gainNode.gain.value = soundOn ? MAX_VOL * f : 0;
   }
-  function startAudio() {
-    if (audioStarted || !arena) return;
+  async function startAudio() {
+    if (audioReady || starting) return;
+    starting = true;
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
       audioCtx = new AC();
-      const src = audioCtx.createMediaElementSource(arena);
       gainNode = audioCtx.createGain();
       gainNode.gain.value = 0;
-      src.connect(gainNode).connect(audioCtx.destination);
-    } catch (e) {}
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-    const pr = arena.play();
-    if (pr) pr.then(() => { audioStarted = true; }).catch(() => { audioStarted = true; });
-    else audioStarted = true;
+      gainNode.connect(audioCtx.destination);
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      const res = await fetch('audio/arena.mp3');
+      const buf = await audioCtx.decodeAudioData(await res.arrayBuffer());
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      src.connect(gainNode);
+      src.start(0);
+      audioReady = true;
+    } catch (e) { starting = false; }
   }
+  // browsers require a gesture before sound — start on the first interaction (retry until it sticks)
   ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev =>
-    window.addEventListener(ev, startAudio, { once: true, passive: true }));
+    window.addEventListener(ev, startAudio, { passive: true }));
   if (soundBtn) {
     requestAnimationFrame(() => soundBtn.classList.add('show'));
     soundBtn.addEventListener('click', () => {
       soundOn = !soundOn;
       soundBtn.classList.toggle('muted', !soundOn);
-      if (soundOn) { startAudio(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {}); }
+      if (soundOn && !audioReady) startAudio();
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
     });
   }
 
@@ -1696,7 +1704,7 @@
     onLeave:     ()   => { targetFrame = COUNT - 1; if (soundBtn) soundBtn.classList.remove('show'); },
     onLeaveBack: ()   => { targetFrame = 0; },
     onEnterBack: self => { targetFrame = self.progress * (COUNT - 1);
-                           if (arena && audioStarted && soundOn) arena.play().catch(() => {});
+                           if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
                            if (soundBtn) soundBtn.classList.add('show'); },
   });
 
