@@ -51,20 +51,18 @@
       --fm:     'BrauMono', 'DM Mono', monospace;                     /* subheadings */
     }
 
-    html { scroll-behavior: auto; overflow-x: hidden; overscroll-behavior: none; }
+    html { scroll-behavior: auto; }   /* no overflow here — it breaks position:sticky */
 
     body {
       background: var(--dark);
       color: var(--light);
       font-family: var(--fb);
       overflow-x: hidden;
-      overscroll-behavior: none;
       cursor: none;
     }
-    /* mobile: only allow vertical scrolling so the hero can't be dragged sideways */
+    /* mobile: block sideways drag without affecting layout/sticky */
     @media (hover: none) and (pointer: coarse) {
-      html, body { touch-action: pan-y; }
-      body { cursor: auto; }
+      body { touch-action: pan-y; cursor: auto; }
     }
 
     /* ── CURSOR ─────────────────────────────── */
