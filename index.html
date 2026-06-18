@@ -65,6 +65,24 @@
       body { touch-action: pan-y; cursor: auto; }
     }
 
+    /* ── SOUND TOGGLE ───────────────────────── */
+    .sound-toggle{ position:fixed; left:24px; bottom:24px; z-index:120; width:44px; height:44px;
+      border-radius:50%; border:1px solid rgba(140,184,0,0.4); background:rgba(0,26,24,0.55);
+      backdrop-filter:blur(8px); cursor:pointer; display:flex; align-items:center; justify-content:center;
+      opacity:0; transform:translateY(8px); transition:opacity .5s ease, transform .5s ease, border-color .2s; }
+    .sound-toggle.show{ opacity:1; transform:none; }
+    .sound-toggle:hover{ border-color:var(--lime); }
+    .snd-bars{ display:flex; align-items:center; gap:3px; height:16px; }
+    .snd-bars i{ width:2.5px; height:100%; background:var(--lime); border-radius:2px; transform-origin:center;
+      animation:sndBar 1s ease-in-out infinite; }
+    .snd-bars i:nth-child(1){ animation-delay:0s; }
+    .snd-bars i:nth-child(2){ animation-delay:.18s; }
+    .snd-bars i:nth-child(3){ animation-delay:.36s; }
+    .snd-bars i:nth-child(4){ animation-delay:.54s; }
+    @keyframes sndBar{ 0%,100%{ transform:scaleY(.35); } 50%{ transform:scaleY(1); } }
+    .sound-toggle.muted .snd-bars i{ animation-play-state:paused; transform:scaleY(.35); background:rgba(140,184,0,.4); }
+    @media (max-width:820px){ .sound-toggle{ left:16px; bottom:16px; width:40px; height:40px; } }
+
     /* ── CURSOR ─────────────────────────────── */
     #cur {
       position: fixed; width: 8px; height: 8px;
@@ -1126,6 +1144,12 @@
   </a>
 </div>
 
+<!-- ── ARENA AMBIENCE (plays under the hero, fades out as it ends) ── -->
+<audio id="arenaAudio" src="audio/arena.mp3" loop preload="auto"></audio>
+<button id="soundToggle" class="sound-toggle" aria-label="Toggle sound" title="Sound">
+  <span class="snd-bars"><i></i><i></i><i></i><i></i></span>
+</button>
+
 <!-- ── HERO ───────────────────────────────── -->
 <section id="hero">
   <div id="hero-sticky">
@@ -1613,14 +1637,48 @@
     requestAnimationFrame(scrubLoop);
   })();
 
+  // ── ARENA AMBIENCE ───────────────────────────
+  const arena     = document.getElementById('arenaAudio');
+  const soundBtn  = document.getElementById('soundToggle');
+  const MAX_VOL   = 0.4;
+  let audioStarted = false;
+  let soundOn      = true;
+  let heroProgress = 0;
+
+  function heroVol() {
+    // full under the hero, fades out over the last 35% of the hero scroll
+    const fade = heroProgress < 0.65 ? 1 : Math.max(0, (1 - heroProgress) / 0.35);
+    return soundOn ? MAX_VOL * fade : 0;
+  }
+  function startAudio() {
+    if (audioStarted || !arena) return;
+    arena.volume = 0;
+    const p = arena.play();
+    if (p) p.then(() => { audioStarted = true; arena.volume = heroVol(); }).catch(() => {});
+  }
+  // browsers need a gesture before sound — start on the first interaction
+  ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev =>
+    window.addEventListener(ev, startAudio, { once: true, passive: true }));
+  if (soundBtn) {
+    requestAnimationFrame(() => soundBtn.classList.add('show'));
+    soundBtn.addEventListener('click', () => {
+      soundOn = !soundOn;
+      soundBtn.classList.toggle('muted', !soundOn);
+      if (soundOn) { startAudio(); if (audioStarted) arena.play().catch(() => {}); }
+      if (arena) arena.volume = heroVol();
+    });
+  }
+
   ScrollTrigger.create({
     trigger: '#hero',
     start: 'top top',
     end: 'bottom bottom',
-    onUpdate:    self => { targetFrame = self.progress * (COUNT - 1); },
-    onLeave:     ()   => { targetFrame = COUNT - 1; },
+    onUpdate:    self => { targetFrame = self.progress * (COUNT - 1);
+                           heroProgress = self.progress; if (arena && audioStarted) arena.volume = heroVol(); },
+    onLeave:     ()   => { targetFrame = COUNT - 1; if (arena) arena.pause(); },        // hero ended → stop
     onLeaveBack: ()   => { targetFrame = 0; },
-    onEnterBack: self => { targetFrame = self.progress * (COUNT - 1); },
+    onEnterBack: self => { targetFrame = self.progress * (COUNT - 1);
+                           if (arena && audioStarted && soundOn) arena.play().catch(() => {}); },
   });
 
   // Refresh ScrollTrigger after all assets load to fix mis-calculated positions
