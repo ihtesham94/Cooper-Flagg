@@ -1536,45 +1536,49 @@
   else window.addEventListener('scroll', onIntroScroll, { passive: true });
 
   // ── CANVAS FRAME SEQUENCE ────────────────────
-  const TOTAL_FRAMES = 94;
-  const frames  = new Array(TOTAL_FRAMES).fill(null);
-  const canvas  = document.getElementById('hero-canvas');
-  // alpha:false — skips alpha compositing pass, meaningfully faster on Android
-  const ctx     = canvas.getContext('2d', { alpha: false });
+  // Mobile uses a lighter, pre-cropped, half-resolution frame set, every 2nd frame,
+  // so the whole sequence fits in memory and decodes up front (no eviction = no jumps).
+  const SRC_FRAMES = 94;
+  const STEP       = isMobile ? 2 : 1;
+  const FRAME_DIR  = isMobile ? 'frames-mobile/' : 'frames/';
+  const FRAME_VER  = isMobile ? 'v=cfheroM1' : 'v=cfhero2';
+  const frameNums  = [];
+  for (let i = 0; i < SRC_FRAMES; i += STEP) frameNums.push(i);
+  if (frameNums[frameNums.length - 1] !== SRC_FRAMES - 1) frameNums.push(SRC_FRAMES - 1);
+  const COUNT  = frameNums.length;
+  const frames = new Array(COUNT).fill(null);
+  const canvas = document.getElementById('hero-canvas');
+  const ctx    = canvas.getContext('2d', { alpha: false });
 
   let targetFrame  = 0;
   let currentFrame = 0;
   let lastDrawn    = -1;
 
-  // Cap DPR at 1.5 — a 3× Android device otherwise draws 9× the pixels
-  // for no visible gain at scroll speeds.
-  const DPR = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
+  const DPR = Math.min(window.devicePixelRatio || 1, isMobile ? 2 : 2);
 
   function resizeCanvas() {
     canvas.width  = Math.floor(window.innerWidth  * DPR);
     canvas.height = Math.floor(window.innerHeight * DPR);
     canvas.style.width  = window.innerWidth  + 'px';
     canvas.style.height = window.innerHeight + 'px';
-    lastDrawn = -1; // force redraw after resize
+    lastDrawn = -1;
     drawFrameIndex(Math.round(currentFrame));
   }
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
   function drawFrameIndex(i) {
-    let idx = Math.max(0, Math.min(TOTAL_FRAMES - 1, i));
-    // If the requested frame hasn't loaded yet, draw the nearest one that has,
-    // so the scrub never freezes on frame 0 and then snaps to a far frame.
+    let idx = Math.max(0, Math.min(COUNT - 1, i));
     if (!frames[idx]) {
       let found = -1;
-      for (let d = 1; d < TOTAL_FRAMES; d++) {
+      for (let d = 1; d < COUNT; d++) {
         if (idx - d >= 0 && frames[idx - d]) { found = idx - d; break; }
-        if (idx + d < TOTAL_FRAMES && frames[idx + d]) { found = idx + d; break; }
+        if (idx + d < COUNT && frames[idx + d]) { found = idx + d; break; }
       }
       if (found === -1) return;
       idx = found;
     }
-    if (idx === lastDrawn) return; // skip if same frame — saves GPU upload
+    if (idx === lastDrawn) return;
     const img = frames[idx];
     lastDrawn = idx;
     const cw = canvas.width, ch = canvas.height;
@@ -1584,29 +1588,16 @@
     ctx.drawImage(img, (cw - sw) / 2, (ch - sh) / 2, sw, sh);
   }
 
-  // Batch loading — wait for each batch before firing the next so we don't
-  // exhaust Android's HTTP pool / RAM. Larger batches on desktop for fast fill.
-  const BATCH = isMobile ? 8 : 24;
-  function loadBatch(start) {
-    if (start >= TOTAL_FRAMES) return;
-    const end = Math.min(start + BATCH, TOTAL_FRAMES);
-    let done = 0;
-    for (let i = start; i < end; i++) {
-      const img = new Image();
-      const idx = i;
-      img.onload = img.onerror = () => {
-        frames[idx] = img.complete && img.naturalWidth ? img : null;
-        if (idx === 0) drawFrameIndex(0);
-        if (++done === end - start) loadBatch(end);
-      };
-      img.src = `frames/frame_${String(i + 1).padStart(4, '0')}.jpg?v=cfhero2`;
-    }
-  }
-  loadBatch(0);
+  // Eager parallel load + decode — decoded frames draw instantly (no main-thread jank).
+  frameNums.forEach((num, idx) => {
+    const img = new Image();
+    img.src = `${FRAME_DIR}frame_${String(num + 1).padStart(4, '0')}.jpg?${FRAME_VER}`;
+    const done = () => { frames[idx] = img.naturalWidth ? img : null; if (idx === 0) drawFrameIndex(0); };
+    if (img.decode) img.decode().then(done).catch(done);
+    else { img.onload = done; img.onerror = done; }
+  });
 
-  // Adaptive lerp — touch scroll on Android fires in bursts; higher value
-  // means the canvas catches up faster so frames feel glued to the finger.
-  const LERP = isMobile ? 0.28 : 0.18;
+  const LERP = isMobile ? 0.2 : 0.18;
 
   (function scrubLoop() {
     currentFrame += (targetFrame - currentFrame) * LERP;
@@ -1618,10 +1609,10 @@
     trigger: '#hero',
     start: 'top top',
     end: 'bottom bottom',
-    onUpdate:    self => { targetFrame = self.progress * (TOTAL_FRAMES - 1); },
-    onLeave:     ()   => { targetFrame = TOTAL_FRAMES - 1; },
+    onUpdate:    self => { targetFrame = self.progress * (COUNT - 1); },
+    onLeave:     ()   => { targetFrame = COUNT - 1; },
     onLeaveBack: ()   => { targetFrame = 0; },
-    onEnterBack: self => { targetFrame = self.progress * (TOTAL_FRAMES - 1); },
+    onEnterBack: self => { targetFrame = self.progress * (COUNT - 1); },
   });
 
   // Refresh ScrollTrigger after all assets load to fix mis-calculated positions
