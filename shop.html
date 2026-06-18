@@ -145,7 +145,7 @@
       display:grid; grid-template-columns:1fr 1fr; background:var(--bg);
       border:1px solid var(--accent); animation:pmIn .4s cubic-bezier(.16,1,.3,1); }
     @keyframes pmIn{ from{ opacity:0; transform:translateY(20px); } to{ opacity:1; transform:none; } }
-    .pm-media{ position:relative; background:var(--tile); min-height:440px; }
+    .pm-media{ position:relative; background:var(--tile); min-height:440px; min-width:0; }
     .pm-media.accent{ background:var(--pop); }
     .pm-media .ph{ position:absolute; inset:0; display:flex; flex-direction:column; gap:8px; align-items:center; justify-content:center; text-align:center; padding:0 24px; }
     .pm-media .ph .pt{ font-family:var(--fm); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:rgba(0,47,44,.4); }
@@ -156,9 +156,9 @@
       cursor:pointer; overflow:hidden; opacity:.65; transition:opacity .2s, border-color .2s; }
     .pm-thumb img{ width:100%; height:100%; object-fit:cover; object-position:50% 6%; }
     .pm-thumb.active, .pm-thumb:hover{ opacity:1; border-color:var(--accent); }
-    .pm-body{ padding:40px 38px; overflow-y:auto; }
+    .pm-body{ padding:40px 38px; overflow-y:auto; min-width:0; }
     .pm-cat{ font-family:var(--fm); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); margin-bottom:16px; }
-    .pm-name{ font-family:var(--fd); font-size:40px; line-height:.94; text-transform:uppercase; color:var(--ink); margin-bottom:10px; }
+    .pm-name{ font-family:var(--fd); font-size:40px; line-height:.94; text-transform:uppercase; color:var(--ink); margin-bottom:10px; overflow-wrap:break-word; text-wrap:balance; }
     .pm-price{ font-family:var(--fm); font-weight:700; font-size:19px; letter-spacing:-.01em; color:var(--ink); margin-bottom:22px; }
     .pm-desc{ font-family:var(--fb); font-size:15px; line-height:1.62; color:var(--accent); margin-bottom:24px; text-wrap:pretty; }
     .pm-fit{ font-family:var(--fb); font-size:13px; line-height:1.6; color:rgba(0,47,44,.6);
@@ -273,8 +273,15 @@
       .tile-name,.tile-price{ font-size:17px; }
       .view-more{ width:78px; height:78px; font-size:9px; }
       .pm{ grid-template-columns:1fr; max-height:92vh; }
-      .pm-media{ min-height:300px; aspect-ratio:4/3; }
-      .pm-body{ padding:28px 22px; }
+      .pm-media{ min-height:0; aspect-ratio:4/5; }
+      .pm-body{ padding:30px 24px 34px; }
+      .pm-cat{ font-size:10px; margin-bottom:14px; }
+      .pm-name{ font-size:clamp(26px,7.4vw,33px); line-height:1.04; margin-bottom:12px; }
+      .pm-price{ font-size:18px; margin-bottom:22px; }
+      .pm-desc{ font-size:14px; line-height:1.62; margin-bottom:24px; }
+      .pm-fit{ padding:18px 0 22px; }
+      .pm-label{ margin-bottom:14px; }
+      .pm-sizes{ gap:10px; margin-bottom:26px; }
       .footer-top{ flex-direction:column; align-items:flex-start; gap:30px; }
       .footer-links{ gap:44px; }
     }
