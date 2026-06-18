@@ -51,14 +51,20 @@
       --fm:     'BrauMono', 'DM Mono', monospace;                     /* subheadings */
     }
 
-    html { scroll-behavior: auto; }
+    html { scroll-behavior: auto; overflow-x: hidden; overscroll-behavior: none; }
 
     body {
       background: var(--dark);
       color: var(--light);
       font-family: var(--fb);
       overflow-x: hidden;
+      overscroll-behavior: none;
       cursor: none;
+    }
+    /* mobile: only allow vertical scrolling so the hero can't be dragged sideways */
+    @media (hover: none) and (pointer: coarse) {
+      html, body { touch-action: pan-y; }
+      body { cursor: auto; }
     }
 
     /* ── CURSOR ─────────────────────────────── */
@@ -1388,18 +1394,21 @@
 
   // ── LENIS SMOOTH SCROLL ─────────────────────
   // Disabled on mobile — iOS native scroll is far smoother for video scrubbing
-  const lenis = new Lenis({
-    duration:        isMobile ? 0 : 0.9,
-    easing:          t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    smoothWheel:     !isMobile,
-    smoothTouch:     false,
-    wheelMultiplier: 1.0,
-    touchMultiplier: 1.0,
-  });
-
-  lenis.on('scroll', ScrollTrigger.update);
-  gsap.ticker.add(time => lenis.raf(time * 1000));
-  gsap.ticker.lagSmoothing(0);
+  // Smooth scroll on desktop only — on mobile we use native scroll (Lenis on touch caused jank/drag)
+  let lenis = null;
+  if (!isMobile) {
+    lenis = new Lenis({
+      duration:        0.9,
+      easing:          t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel:     true,
+      smoothTouch:     false,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 1.0,
+    });
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add(time => lenis.raf(time * 1000));
+    gsap.ticker.lagSmoothing(0);
+  }
 
   // smooth-scroll for in-page nav anchors
   document.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -1409,7 +1418,8 @@
       const target = document.querySelector(id);
       if(!target) return;
       e.preventDefault();
-      lenis.scrollTo(target, { offset: 0, duration: 1.2 });
+      if (lenis) lenis.scrollTo(target, { offset: 0, duration: 1.2 });
+      else target.scrollIntoView({ behavior: 'smooth' });
     });
   });
 
@@ -1515,13 +1525,12 @@
   else window.addEventListener('load', showIntro);
 
   // Show intro when back at top, dismiss when scrolling away
-  lenis.on('scroll', ({ scroll }) => {
-    if (scroll < 8) {
-      showIntro();
-    } else {
-      dismissIntro();
-    }
-  });
+  const onIntroScroll = () => {
+    const s = lenis ? lenis.scroll : window.scrollY;
+    if (s < 8) showIntro(); else dismissIntro();
+  };
+  if (lenis) lenis.on('scroll', onIntroScroll);
+  else window.addEventListener('scroll', onIntroScroll, { passive: true });
 
   // ── CANVAS FRAME SEQUENCE ────────────────────
   const TOTAL_FRAMES = 94;
@@ -1667,7 +1676,7 @@
     }
     window.addEventListener('scroll', updateStmtReveal, { passive:true });
     window.addEventListener('resize', updateStmtReveal);
-    if (typeof lenis !== 'undefined' && lenis.on) lenis.on('scroll', updateStmtReveal);
+    if (lenis && lenis.on) lenis.on('scroll', updateStmtReveal);
     updateStmtReveal();
   }
 
@@ -2032,10 +2041,10 @@
       jcard.querySelector('#jModalClose2').addEventListener('click', closeJModal);
       jmodal.classList.add('open');
       document.body.style.overflow='hidden';
-      if(typeof lenis!=='undefined' && lenis.stop) lenis.stop();
+      if(lenis && lenis.stop) lenis.stop();
     }
     function closeJModal(){ jmodal.classList.remove('open'); document.body.style.overflow='';
-      if(typeof lenis!=='undefined' && lenis.start) lenis.start(); }
+      if(lenis && lenis.start) lenis.start(); }
 
     /* Particles */
     const pc = document.getElementById('jParticles');
