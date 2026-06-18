@@ -10,6 +10,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 
 <style>
+@font-face{ font-family:'HelvNowCondBold'; font-display:swap; font-weight:400 900; font-style:normal;
+  src:url('fonts/HelveticaNowCondensed-Bold.woff2') format('woff2'),
+      url('fonts/HelveticaNowCondensed-Bold.woff') format('woff'); }
+@font-face{ font-family:'HelvNowCond'; font-display:swap; font-weight:400; font-style:normal;
+  src:url('fonts/HelveticaNowCondensed-Regular.woff2') format('woff2'),
+      url('fonts/HelveticaNowCondensed-Regular.woff') format('woff'); }
+@font-face{ font-family:'BrauMono'; font-weight:300; font-display:swap; font-style:normal;
+  src:url('fonts/BrauMono-Fine.woff2') format('woff2'); }
+@font-face{ font-family:'BrauMono'; font-weight:400; font-display:swap; font-style:normal;
+  src:url('fonts/BrauMono-Regular.woff2') format('woff2'); }
+@font-face{ font-family:'BrauMono'; font-weight:700; font-display:swap; font-style:normal;
+  src:url('fonts/BrauMono-Bold.woff2') format('woff2'); }
 *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 
 :root{
@@ -19,9 +31,9 @@
   --light:#F4F4EF;
   --muted:rgba(244,244,239,0.45);
   --line:rgba(255,255,255,0.05);
-  --fb:'Inter',system-ui,sans-serif;
-  --fd:'Bebas Neue',sans-serif;
-  --fm:'DM Mono',monospace;
+  --fb:'HelvNowCond','Inter',system-ui,sans-serif;
+  --fd:'HelvNowCondBold','Bebas Neue',sans-serif;
+  --fm:'BrauMono','DM Mono',monospace;
 }
 
 html,body{ height:100%; }
@@ -212,7 +224,7 @@ body{
 .mt-card-hint{ font-family:var(--fm); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
 .mt-end{ text-align:center; padding:40px 24px 24px; }
 .mt-end .e-eyebrow{ font-family:var(--fm); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime); margin-bottom:14px; }
-.mt-end .e-h{ font-family:var(--fd); font-size:64px; line-height:.9; }
+.mt-end .e-h{ font-family:var(--fd); font-size:54px; line-height:.9; white-space:nowrap; text-transform:uppercase; }
 .mt-end .e-h em{ font-style:normal; color:var(--lime); }
 .mt-end .e-p{ margin-top:14px; font-size:13px; font-weight:300; color:var(--muted); line-height:1.7; }
 
@@ -277,7 +289,9 @@ body{
 /* end cap */
 .endcap{ position:absolute; top:50%; left:50%; width:560px; max-width:80vw; text-align:center; }
 .endcap .e-eyebrow{ font-family:var(--fm); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--lime); margin-bottom:16px; }
-.endcap .e-h{ font-family:var(--fd); font-size:clamp(48px,8vw,110px); line-height:.9; }
+.endcap .e-h{ font-family:var(--fd); font-size:clamp(48px,8vw,110px); line-height:.9; white-space:nowrap; text-transform:uppercase; }
+/* All titles in caps */
+.hud-title, .frame-ttl, .fi-title, .mt-card-ttl, .modal-title { text-transform:uppercase; }
 .endcap .e-h em{ font-style:normal; color:var(--lime); }
 .endcap .e-p{ margin-top:18px; font-size:14px; font-weight:300; color:var(--muted); line-height:1.7; }
 </style>
@@ -311,9 +325,8 @@ body{
   <div class="mt-spine"><div class="mt-fill" id="mtFill"></div></div>
   <div class="mt-list" id="mtList"></div>
   <div class="mt-end">
-    <div class="e-eyebrow">2026 · The North Star Arrives</div>
-    <div class="e-h">DIRIGO.<br><em>I lead.</em></div>
-    <div class="e-p">From the smallest town in Maine to the biggest stage in basketball.</div>
+    <div class="e-h">DIRIGO. <em>I lead.</em></div>
+    <div class="e-p">From the smallest town in Maine to the biggest stage in the NBA.</div>
   </div>
 </div>
 

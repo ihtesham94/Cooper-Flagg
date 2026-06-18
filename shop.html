@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SWAGG · Cooper Flagg</title>
+  <style>
+    @font-face{ font-family:'HelvNowCondBold'; font-display:swap; font-weight:400 900; font-style:normal;
+      src:url('fonts/HelveticaNowCondensed-Bold.woff2') format('woff2'),
+          url('fonts/HelveticaNowCondensed-Bold.woff') format('woff'); }
+    @font-face{ font-family:'HelvNowCond'; font-display:swap; font-weight:400; font-style:normal;
+      src:url('fonts/HelveticaNowCondensed-Regular.woff2') format('woff2'),
+          url('fonts/HelveticaNowCondensed-Regular.woff') format('woff'); }
+    @font-face{ font-family:'HelvNowCondXLt'; font-display:swap; font-weight:200 300; font-style:normal;
+      src:url('fonts/HelveticaNowCondensed-ExtraLight.woff2') format('woff2'); }
+    @font-face{ font-family:'BrauMono'; font-weight:400; font-display:swap; font-style:normal;
+      src:url('fonts/BrauMono-Regular.woff2') format('woff2'); }
+    @font-face{ font-family:'BrauMono'; font-weight:700; font-display:swap; font-style:normal;
+      src:url('fonts/BrauMono-Bold.woff2') format('woff2'); }
+
+    *, *::before, *::after{ box-sizing:border-box; margin:0; padding:0; }
+
+    :root{
+      --bg:#EFEFE7; --ink:#14201E; --accent:#002F2C; --pop:#8CB800;
+      --tile:#E3E3DC; --line:#002F2C;
+      --fb:'HelvNowCond','Inter',system-ui,sans-serif;
+      --fd:'HelvNowCondBold','Bebas Neue',sans-serif;
+      --fm:'BrauMono','DM Mono',monospace;
+    }
+
+    html{ scroll-behavior:smooth; }
+    body{ background:var(--bg); color:var(--accent); font-family:var(--fb);
+      -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+    a{ color:inherit; text-decoration:none; }
+    img{ display:block; max-width:100%; }
+    ::selection{ background:var(--accent); color:var(--bg); }
+
+    /* ── NAV ─────────────────────────────────── */
+    #nav{ position:sticky; top:0; z-index:60; display:flex; align-items:center;
+      justify-content:space-between; padding:22px 40px;
+      background:var(--bg); }
+    .nav-wordmark img{ height:30px; width:auto; }
+    .nav-right{ display:flex; align-items:center; gap:34px; }
+    .nav-link{ font-family:var(--fd); font-size:22px; letter-spacing:.01em; color:var(--accent);
+      text-transform:uppercase; transition:opacity .2s; cursor:pointer; background:none; border:none; }
+    .nav-link.active{ text-decoration:underline; text-underline-offset:5px; text-decoration-thickness:2px; }
+    .nav-link:hover{ opacity:.6; }
+    .nav-dots{ display:flex; gap:9px; align-items:center; }
+    .nav-dots i{ width:15px; height:15px; border-radius:50%; display:inline-block; }
+    .nav-dots i:nth-child(1){ background:var(--accent); }
+    .nav-dots i:nth-child(2){ background:transparent; border:1.5px solid var(--accent); }
+    .nav-dots i:nth-child(3){ background:var(--pop); }
+
+    /* ── HERO ────────────────────────────────── */
+    .hero{ padding:34px 40px 0; }
+    .hero-title{ position:relative; font-family:var(--fd); color:var(--accent);
+      font-size:clamp(110px,25.5vw,460px); line-height:.82; letter-spacing:-.01em;
+      text-transform:uppercase; white-space:nowrap; }
+    /* each letter rises into place individually, staggered */
+    .hero-title .ltr{ display:inline-block; overflow:hidden; vertical-align:top; }
+    .hero-title .ltr > span{ display:inline-block; transform:translateY(110%);
+      transition:transform 1s cubic-bezier(.16,1,.3,1); }
+    body.ready .hero-title .ltr > span{ transform:translateY(0); }
+    .hero-title .ltr:nth-child(1) > span{ transition-delay:.06s; }
+    .hero-title .ltr:nth-child(2) > span{ transition-delay:.15s; }
+    .hero-title .ltr:nth-child(3) > span{ transition-delay:.24s; }
+    .hero-title .ltr:nth-child(4) > span{ transition-delay:.33s; }
+    .hero-title .ltr:nth-child(5) > span{ transition-delay:.42s; }
+    .hero-title sup{ font-size:.12em; vertical-align:top; top:.4em; position:relative;
+      opacity:0; transition:opacity .5s ease .55s; }
+    body.ready .hero-title sup{ opacity:1; }
+    .hero-rule{ height:4px; background:var(--accent); margin:16px 0 44px;
+      transform:scaleX(0); transform-origin:left; transition:transform .95s cubic-bezier(.16,1,.3,1) .25s; }
+    body.ready .hero-rule{ transform:scaleX(1); }
+    .meta{ display:grid; grid-template-columns:1.5fr 1.5fr 1.2fr .5fr; gap:48px; padding-bottom:92px;
+      opacity:0; transform:translateY(14px);
+      transition:opacity .8s ease .4s, transform .85s cubic-bezier(.16,1,.3,1) .4s; }
+    body.ready .meta{ opacity:1; transform:none; }
+    .meta-label{ font-family:var(--fm); font-size:13px; letter-spacing:.04em; text-transform:uppercase; color:var(--accent); }
+    .meta-desc{ font-family:'HelvNowCondXLt','HelvNowCond','Inter',sans-serif; font-size:18px; line-height:1.55; color:var(--accent);
+      max-width:380px; text-wrap:pretty; }
+    .meta-col a{ display:block; }
+    .meta-col .meta-label + .meta-label{ margin-top:28px; }
+    .meta-link{ position:relative; }
+    .meta-link:hover{ opacity:.6; }
+
+    /* ── GRID ────────────────────────────────── */
+    .shop-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:64px 26px; padding:0 40px 120px;
+      grid-auto-flow:dense; align-items:start; }
+    .tile{ cursor:pointer; opacity:0; clip-path:inset(0 0 104% 0); -webkit-clip-path:inset(0 0 104% 0);
+      transition:clip-path 1s cubic-bezier(.16,1,.3,1), -webkit-clip-path 1s cubic-bezier(.16,1,.3,1), opacity .85s ease; }
+    .tile.in{ opacity:1; clip-path:inset(0 0 0 0); -webkit-clip-path:inset(0 0 0 0); }
+    .tile.wide{ grid-column:span 2; }   /* hero pieces sit larger */
+    .tile-media{ position:relative; aspect-ratio:1/1.18; overflow:hidden; background:var(--tile); }
+    .tile.wide .tile-media{ aspect-ratio:5/4; }
+    .tile-media img{ transform:scale(1.06); transition:transform 1.2s cubic-bezier(.16,1,.3,1); }
+    .tile.in .tile-media img{ transform:scale(1); }
+    /* hard left-to-right wipe (linear, no easing) with a glow riding the wipe edge */
+    .tile-media img.alt{ z-index:2; opacity:1;
+      clip-path:inset(0 100% 0 0); -webkit-clip-path:inset(0 100% 0 0);
+      transition:clip-path .55s linear, -webkit-clip-path .55s linear,
+                 transform 1.2s cubic-bezier(.16,1,.3,1); }
+    .tile:hover .tile-media img.alt{ clip-path:inset(0 0 0 0); -webkit-clip-path:inset(0 0 0 0); }
+    /* lifestyle feature tiles */
+    .tile.feature{ cursor:default; }
+    .tile.feature.land .tile-media{ aspect-ratio:16/10; }
+    .tile.feature.tall .tile-media{ aspect-ratio:1/1.34; }
+    .tile.feature.full{ grid-column:1 / -1; }
+    .tile.feature.full .tile-media{ aspect-ratio:16/9; }
+    /* coming-soon placeholder tiles */
+    .tile.soon{ cursor:default; }
+    .tile.soon .tile-media{ background:repeating-linear-gradient(45deg,#e6e6df,#e6e6df 14px,#e1e1da 14px,#e1e1da 28px); }
+    .tile.soon .ph .pt{ color:rgba(0,47,44,.4); }
+    .tile.soon .ph .pn{ color:rgba(0,47,44,.18); }
+    .tile-price.soon-tag{ color:rgba(0,47,44,.45); }
+    .tile.accent .tile-media{ background:var(--pop); }
+    .tile.dark .tile-media{ background:var(--accent); }
+    .tile-media .ph{ position:absolute; inset:0; display:flex; flex-direction:column; gap:8px;
+      align-items:center; justify-content:center; text-align:center; padding:0 22px; }
+    .tile-media .ph .pt{ font-family:var(--fm); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:rgba(0,47,44,.4); }
+    .tile.accent .ph .pt{ color:rgba(0,26,24,.5); }
+    .tile.dark .ph .pt{ color:rgba(140,184,0,.7); }
+    .tile-media .ph .pn{ font-family:var(--fd); font-size:24px; line-height:.98; text-transform:uppercase; color:rgba(0,47,44,.22); }
+    .tile.accent .ph .pn{ color:rgba(0,26,24,.4); }
+    .tile.dark .ph .pn{ color:rgba(244,244,239,.3); }
+    .tile-media img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 8%; }
+    .view-more{ position:absolute; left:50%; top:50%; z-index:3; width:96px; height:96px; border-radius:50%;
+      background:var(--accent); color:var(--pop); display:flex; align-items:center; justify-content:center;
+      font-family:var(--fm); font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+      transform:translate(-50%,-50%) scale(0); transition:transform .35s cubic-bezier(.16,1,.3,1); }
+    .tile:hover .view-more{ transform:translate(-50%,-50%) scale(1); }
+    .tile-foot{ display:flex; justify-content:space-between; align-items:baseline; gap:14px; margin-top:14px; }
+    .tile-name{ font-family:var(--fb); font-weight:400; font-size:14px; line-height:1.2; color:var(--ink); }
+    .tile-price{ font-family:var(--fm); font-weight:400; font-size:13px; letter-spacing:0; color:var(--ink); white-space:nowrap; }
+    .tile-cat{ display:flex; align-items:center; gap:7px; margin-top:6px;
+      font-family:var(--fm); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); }
+    .tile-cat i{ width:6px; height:6px; }
+    .tile-cat i{ width:7px; height:7px; border-radius:50%; background:var(--pop); }
+
+    /* ── PRODUCT MODAL ───────────────────────── */
+    .pm-overlay{ position:fixed; inset:0; z-index:80; background:rgba(0,26,24,0.45);
+      backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; padding:24px; }
+    .pm-overlay.open{ display:flex; }
+    .pm{ position:relative; width:100%; max-width:880px; max-height:88vh; overflow:hidden;
+      display:grid; grid-template-columns:1fr 1fr; background:var(--bg);
+      border:1px solid var(--accent); animation:pmIn .4s cubic-bezier(.16,1,.3,1); }
+    @keyframes pmIn{ from{ opacity:0; transform:translateY(20px); } to{ opacity:1; transform:none; } }
+    .pm-media{ position:relative; background:var(--tile); min-height:440px; }
+    .pm-media.accent{ background:var(--pop); }
+    .pm-media .ph{ position:absolute; inset:0; display:flex; flex-direction:column; gap:8px; align-items:center; justify-content:center; text-align:center; padding:0 24px; }
+    .pm-media .ph .pt{ font-family:var(--fm); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:rgba(0,47,44,.4); }
+    .pm-media .ph .pn{ font-family:var(--fd); font-size:30px; text-transform:uppercase; color:rgba(0,47,44,.25); }
+    .pm-media .pm-main{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 8%; }
+    .pm-thumbs{ position:absolute; left:14px; bottom:14px; z-index:4; display:flex; gap:8px; }
+    .pm-thumb{ width:46px; height:58px; padding:0; border:1px solid rgba(0,47,44,.3); background:var(--tile);
+      cursor:pointer; overflow:hidden; opacity:.65; transition:opacity .2s, border-color .2s; }
+    .pm-thumb img{ width:100%; height:100%; object-fit:cover; object-position:50% 6%; }
+    .pm-thumb.active, .pm-thumb:hover{ opacity:1; border-color:var(--accent); }
+    .pm-body{ padding:40px 38px; overflow-y:auto; }
+    .pm-cat{ font-family:var(--fm); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); margin-bottom:16px; }
+    .pm-name{ font-family:var(--fd); font-size:40px; line-height:.94; text-transform:uppercase; color:var(--ink); margin-bottom:10px; }
+    .pm-price{ font-family:var(--fm); font-weight:700; font-size:19px; letter-spacing:-.01em; color:var(--ink); margin-bottom:22px; }
+    .pm-desc{ font-family:var(--fb); font-size:15px; line-height:1.62; color:var(--accent); margin-bottom:24px; text-wrap:pretty; }
+    .pm-fit{ font-family:var(--fb); font-size:13px; line-height:1.6; color:rgba(0,47,44,.6);
+      padding:18px 0 24px; margin-bottom:4px; border-top:1px solid rgba(0,47,44,.14); text-wrap:pretty; }
+    .pm-fit b{ display:block; font-family:var(--fm); font-weight:400; font-size:10px; letter-spacing:.18em;
+      text-transform:uppercase; color:rgba(0,47,44,.5); margin-bottom:9px; }
+    .pm-label{ font-family:var(--fm); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:rgba(0,47,44,.6); margin-bottom:12px; }
+    .pm-colors{ display:flex; gap:12px; margin-bottom:26px; }
+    .pm-color{ width:28px; height:28px; border-radius:50%; cursor:pointer; padding:0;
+      background:var(--sw); border:1px solid rgba(0,47,44,.25); box-shadow:0 0 0 2px transparent;
+      transition:box-shadow .18s; }
+    .pm-color.active{ box-shadow:0 0 0 2px var(--bg), 0 0 0 3px var(--accent); }
+    .pm-sizes{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px; }
+    .size-btn{ min-width:46px; font-family:var(--fm); font-size:12px; color:var(--accent);
+      background:transparent; border:1px solid var(--accent); padding:11px 14px; cursor:pointer; transition:all .18s; }
+    .size-btn:hover{ background:rgba(0,47,44,.08); }
+    .size-btn.active{ color:var(--bg); background:var(--accent); }
+    .pm-qtyrow{ display:flex; align-items:center; gap:16px; margin-bottom:24px; }
+    .qty{ display:flex; align-items:center; border:1px solid var(--accent); }
+    .qty button{ width:42px; height:42px; background:transparent; border:none; color:var(--accent); font-size:18px; cursor:pointer; }
+    .qty button:hover{ background:rgba(0,47,44,.08); }
+    .qty span{ width:42px; text-align:center; font-family:var(--fm); font-size:14px; }
+    .pm-cta{ width:100%; font-family:var(--fm); font-size:13px; letter-spacing:.12em; text-transform:uppercase;
+      color:var(--bg); background:var(--accent); border:none; padding:17px; cursor:pointer; transition:background .2s; }
+    .pm-cta:hover{ background:#013f3a; }
+    .pm-cta.disabled{ background:#b9bbb2; color:#6c6f66; cursor:not-allowed; }
+    .pm-close{ position:absolute; top:14px; right:16px; z-index:5; width:38px; height:38px;
+      border:1px solid var(--accent); background:var(--bg); color:var(--accent); font-size:20px; cursor:pointer; transition:all .2s; }
+    .pm-close:hover{ background:var(--accent); color:var(--bg); }
+
+    /* ── SHIPPING & RETURNS MODAL ────────────── */
+    .info-overlay{ position:fixed; inset:0; z-index:80; background:rgba(0,26,24,0.45); backdrop-filter:blur(4px);
+      display:none; align-items:center; justify-content:center; padding:24px; }
+    .info-overlay.open{ display:flex; }
+    .info-modal{ position:relative; width:100%; max-width:560px; max-height:88vh; overflow-y:auto;
+      background:var(--bg); border:1px solid var(--accent); padding:46px 42px 42px;
+      animation:pmIn .4s cubic-bezier(.16,1,.3,1); }
+    .info-title{ font-family:var(--fd); font-size:34px; line-height:.96; text-transform:uppercase; color:var(--ink); margin-bottom:30px; }
+    .info-section{ margin-bottom:26px; }
+    .info-section:last-child{ margin-bottom:0; }
+    .info-section h3{ font-family:var(--fm); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); margin-bottom:12px; }
+    .info-section p{ font-family:var(--fb); font-size:15px; line-height:1.62; color:var(--accent); text-wrap:pretty; }
+
+    /* ── CART DRAWER ─────────────────────────── */
+    .cart-scrim{ position:fixed; inset:0; z-index:90; background:rgba(0,26,24,0.4); opacity:0; pointer-events:none; transition:opacity .35s; }
+    .cart-scrim.open{ opacity:1; pointer-events:auto; }
+    .cart{ position:fixed; top:0; right:0; z-index:91; width:430px; max-width:92vw; height:100%;
+      background:var(--bg); border-left:1px solid var(--accent); transform:translateX(100%);
+      transition:transform .42s cubic-bezier(.16,1,.3,1); display:flex; flex-direction:column; }
+    .cart.open{ transform:none; }
+    .cart-head{ display:flex; align-items:center; justify-content:space-between; padding:24px 26px; border-bottom:1px solid var(--accent); }
+    .cart-head h3{ font-family:var(--fd); font-size:26px; text-transform:uppercase; color:var(--accent); }
+    .cart-close{ background:none; border:none; color:var(--accent); font-size:26px; cursor:pointer; line-height:1; }
+    .cart-items{ flex:1; overflow-y:auto; padding:6px 26px; }
+    .cart-empty{ font-family:var(--fm); font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:rgba(0,47,44,.5); text-align:center; padding:60px 20px; line-height:1.9; }
+    .ci{ display:flex; gap:14px; padding:18px 0; border-bottom:1px solid rgba(0,47,44,.14); }
+    .ci-media{ width:70px; height:84px; flex-shrink:0; position:relative; background:var(--tile); }
+    .ci-media img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .ci-mid{ flex:1; min-width:0; }
+    .ci-name{ font-family:var(--fd); font-size:16px; text-transform:uppercase; color:var(--ink); }
+    .ci-meta{ font-family:var(--fm); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:rgba(0,47,44,.6); margin-top:5px; }
+    .ci-qty{ display:flex; align-items:center; gap:10px; margin-top:10px; }
+    .ci-qty button{ width:26px; height:26px; border:1px solid var(--accent); background:transparent; color:var(--accent); cursor:pointer; font-size:14px; }
+    .ci-qty span{ font-family:var(--fm); font-size:12px; min-width:18px; text-align:center; }
+    .ci-right{ display:flex; flex-direction:column; align-items:flex-end; justify-content:space-between; }
+    .ci-price{ font-family:var(--fm); font-weight:700; font-size:13px; letter-spacing:-.01em; color:var(--ink); }
+    .ci-remove{ font-family:var(--fm); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:rgba(0,47,44,.5); background:none; border:none; cursor:pointer; }
+    .ci-remove:hover{ color:#c0392b; }
+    .cart-foot{ padding:22px 26px 26px; border-top:1px solid var(--accent); }
+    .cart-sub{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+    .cart-sub .l{ font-family:var(--fm); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:rgba(0,47,44,.6); }
+    .cart-sub .v{ font-family:var(--fm); font-weight:700; font-size:21px; letter-spacing:-.01em; color:var(--ink); }
+    .cart-note{ font-family:var(--fb); font-size:12px; color:rgba(0,47,44,.55); margin-bottom:16px; }
+    .cart-checkout{ width:100%; font-family:var(--fm); font-size:13px; letter-spacing:.12em; text-transform:uppercase;
+      color:var(--bg); background:var(--accent); border:none; padding:17px; cursor:pointer; transition:background .2s; }
+    .cart-checkout:hover{ background:#013f3a; }
+
+    .toast{ position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px); z-index:120;
+      background:var(--accent); color:var(--bg); font-family:var(--fm); font-size:12px; letter-spacing:.06em;
+      text-transform:uppercase; padding:14px 22px; opacity:0; pointer-events:none; transition:all .3s cubic-bezier(.16,1,.3,1); }
+    .toast.show{ opacity:1; transform:translateX(-50%); }
+
+    /* ── FOOTER ──────────────────────────────── */
+    #footer{ background:var(--accent); color:var(--bg); padding:64px 40px 40px; }
+    .footer-top{ display:flex; align-items:flex-end; justify-content:space-between; gap:40px; padding-bottom:48px; }
+    .footer-logo img{ height:78px; width:auto; }
+    .footer-links{ display:flex; gap:60px; }
+    .footer-col{ display:flex; flex-direction:column; gap:18px; }
+    .footer-col-label{ font-family:var(--fm); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--pop); margin-bottom:4px; }
+    .footer-col a{ font-family:var(--fb); font-size:15px; color:rgba(244,244,239,.6); transition:color .2s; }
+    .footer-col a:hover{ color:var(--bg); }
+    .footer-bottom{ display:flex; align-items:center; justify-content:space-between; padding-top:28px; border-top:1px solid rgba(244,244,239,.14); }
+    .footer-copy{ font-family:var(--fb); font-size:11px; color:rgba(244,244,239,.3); }
+    .footer-mail{ font-family:var(--fb); font-size:13px; color:rgba(140,184,0,.6); transition:color .2s; }
+    .footer-mail:hover{ color:var(--pop); }
+
+    @media (max-width:1100px){
+      .shop-grid{ grid-template-columns:repeat(3,1fr); }
+      .meta{ grid-template-columns:1fr 1fr; gap:30px; }
+    }
+    @media (max-width:720px){
+      #nav{ padding:16px 20px; }
+      .nav-right{ gap:20px; }
+      .nav-link{ font-size:17px; }
+      .nav-dots{ display:none; }
+      .hero{ padding:30px 20px 0; }
+      .hero-title{ font-size:clamp(76px,26vw,150px); }
+      .meta{ grid-template-columns:1fr; gap:28px; padding-bottom:56px; }
+      .meta-desc{ font-size:16px; line-height:1.55; max-width:none; }
+      .meta-col .meta-label + .meta-label{ margin-top:22px; }
+      .shop-grid{ grid-template-columns:repeat(2,1fr); gap:40px 16px; padding:0 20px 84px; }
+      .tile-name,.tile-price{ font-size:17px; }
+      .view-more{ width:78px; height:78px; font-size:9px; }
+      .pm{ grid-template-columns:1fr; max-height:92vh; }
+      .pm-media{ min-height:300px; aspect-ratio:4/3; }
+      .pm-body{ padding:28px 22px; }
+      .footer-top{ flex-direction:column; align-items:flex-start; gap:30px; }
+      .footer-links{ gap:44px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ─────────────────────────────────── -->
+<nav id="nav">
+  <a class="nav-wordmark" href="index.html"><img src="Final CF logo.svg" alt="Cooper Flagg"></a>
+  <div class="nav-right">
+    <a class="nav-link active" href="#shopGrid">Shop</a>
+    <button class="nav-link" id="cartOpen">Bag (<span id="cartCount">0</span>)</button>
+    <span class="nav-dots"><i></i><i></i><i></i></span>
+  </div>
+</nav>
+
+<!-- ── HERO ────────────────────────────────── -->
+<header class="hero">
+  <h1 class="hero-title"><span class="ltr"><span>S</span></span><span class="ltr"><span>W</span></span><span class="ltr"><span>A</span></span><span class="ltr"><span>G</span></span><span class="ltr"><span>G</span></span><sup>®</sup></h1>
+  <div class="hero-rule"></div>
+  <div class="meta">
+    <div class="meta-col">
+      <div class="meta-label" style="margin-bottom:20px">SWAGG</div>
+      <p class="meta-desc">Cooper Flagg Essentials: Meticulously crafted for on and off the court. Premium heavyweight cotton, intentional cuts, understated confidence. This is performance you wear, with detail you feel.</p>
+    </div>
+    <div class="meta-col">
+      <div class="meta-label" style="margin-bottom:20px">Who For</div>
+      <p class="meta-desc">Built for athletes, competitors, and anyone who values discipline over noise. Designed to fit seamlessly into the hours between training, travel, and everyday life.</p>
+    </div>
+    <div class="meta-col">
+      <a class="meta-label meta-link" href="index.html">Visit Cooper Flagg →</a>
+      <a class="meta-label meta-link" href="#" id="shipInfoLink">Shipping & Returns</a>
+    </div>
+    <div class="meta-col"><div class="meta-label">© 2026</div></div>
+  </div>
+</header>
+
+<!-- ── GRID ────────────────────────────────── -->
+<main class="shop-grid" id="shopGrid"></main>
+
+<!-- ── PRODUCT MODAL ───────────────────────── -->
+<div class="pm-overlay" id="pmOverlay"><div class="pm" id="pm"></div></div>
+
+<!-- ── SHIPPING & RETURNS ───────────────────── -->
+<div class="info-overlay" id="infoOverlay">
+  <div class="info-modal">
+    <button class="pm-close" id="infoClose" aria-label="Close">&times;</button>
+    <h2 class="info-title">Shipping &amp; Returns</h2>
+    <div class="info-section">
+      <h3>Shipping</h3>
+      <p>Orders are fulfilled from two centers: London for all European orders, and Dallas for all US orders. Complimentary shipping on every order over $300 USD. You'll receive tracking by email as soon as your order ships.</p>
+    </div>
+    <div class="info-section">
+      <h3>Returns</h3>
+      <p>We accept returns within 14 days of delivery. Items must be unworn, unwashed, and returned with all original tags attached. Once received, refunds are issued to your original payment method.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── CART ────────────────────────────────── -->
+<div class="cart-scrim" id="cartScrim"></div>
+<aside class="cart" id="cartDrawer">
+  <div class="cart-head"><h3>Your Bag</h3><button class="cart-close" id="cartClose" aria-label="Close">&times;</button></div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-foot">
+    <div class="cart-sub"><span class="l">Subtotal</span><span class="v" id="cartSubtotal">$0</span></div>
+    <p class="cart-note">Shipping and taxes calculated at checkout.</p>
+    <button class="cart-checkout" id="cartCheckout">Checkout</button>
+  </div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<!-- ── FOOTER ──────────────────────────────── -->
+<footer id="footer">
+  <div class="footer-top">
+    <div class="footer-logo"><img src="flagg-footer-logo-trim.png" alt="Cooper Flagg"></div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <div class="footer-col-label">Navigate</div>
+        <a href="index.html#journey">Career</a>
+        <a href="index.html#statement">Mission</a>
+        <a href="shop.html">Shop</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-label">Connect</div>
+        <a href="https://www.instagram.com/cooper_flagg/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://x.com/Cooper_Flagg" target="_blank" rel="noopener">Twitter / X</a>
+        <a href="mailto:enquiries@cooperflagg.com">Business Enquiries</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 Cooper Flagg. All rights reserved.</span>
+    <a class="footer-mail" href="mailto:info@ooostudio.xyz">info@ooostudio.xyz</a>
+  </div>
+</footer>
+
+<script>
+  const APP = ['S','M','L','XL','XXL'];
+  const NOXXL = ['S','M','L','XL'];
+  const PRODUCTS = [
+    { id:'hinkle-hoodie',      name:'Hinkle Orange Zip-Up Hoodie', cat:'Hoodies', price:110, color:'Hinkle Orange', sizes:APP, gallery:['hinkle-hoodie','hinkle-hoodie-2','lifestyle-hinkle'], desc:'Cut from heavyweight 400GSM loopback cotton and garment-dyed in Hinkle orange. Distressed CF logo embroidered at the chest. Boxy oversized fit with a brushed interior and full-length zip.' },
+    { id:'mocha-hoodie',       name:'Maple Zip-Up Hoodie',         cat:'Hoodies', price:110, color:'Maple',         sizes:APP, desc:'Heavyweight 400GSM loopback cotton, garment-dyed to a warm maple brown. Distressed CF logo embroidered at the chest. Boxy oversized fit with a brushed interior and full-length zip.' },
+    { id:'maine-green-hoodie', name:'Maine Green Zip-Up Hoodie',   cat:'Hoodies', price:110, color:'Maine Green',   sizes:APP, desc:'Heavyweight 400GSM loopback cotton in a deep Maine green. Distressed CF logo embroidered at the chest. Boxy oversized fit with a brushed interior and full-length zip.' },
+    { id:'varsity-jacket', name:'Varsity Jacket', cat:'Jackets', price:180, color:'Cream / Green', sizes:NOXXL, desc:'Elevated varsity jacket. The defining detail is the overshooting shoulder panels, extended past the seam to sharpen the silhouette and lend it a considered, structured presence. Heavyweight body with a full-length zip and ribbed collar, cuffs and hem.' },
+    { id:'tee-03', name:'Charcoal Maine Way Tee', cat:'Tees', price:55, color:'Charcoal', sizes:NOXXL,
+      desc:'Boxy, cropped fit cut from 200GSM cotton with a relaxed drop shoulder. "The Maine Way" sits across the chest, and beneath it the line that drives the collection: compete, then redefine winning. A staple, made to be worn on repeat.',
+      variants:[
+        { name:'Charcoal Maine Way Tee',  color:'Charcoal',       sw:'#3b3b3d', gallery:['tee-03','tee-03-2'] },
+        { name:'Sage Maine Way Tee',      color:'Muted Sage',     sw:'#97a085', gallery:['tee-01'] },
+        { name:'Off-White Maine Way Tee', color:'Warm Off-White', sw:'#e8e1d3', gallery:['tee-02'] },
+      ] },
+    { id:'cap-01', name:'Burnt Maine Green Cap', cat:'Caps', price:60, color:'Burnt Maine Green', sizes:['One Size'], pos:'50% 50%', desc:'Five-panel cotton cap with twin-needle stitching across all panels and a distressed peak. Adjustable back strap.',
+      variants:[
+        { name:'Burnt Maine Green Cap',   color:'Burnt Maine Green',   sw:'#335c5c', gallery:['cap-01','cap-01-2'] },
+        { name:'Burnt Hinkle Orange Cap', color:'Burnt Hinkle Orange', sw:'#b6603a', gallery:['cap-01-hinkle','cap-01-hinkle-2'] },
+      ] },
+    { id:'cap-02', name:'Flag Cap',      cat:'Caps', price:40, color:'Coming Soon', soon:true },
+  ];
+  const byId = id => PRODUCTS.find(p => p.id === id);
+  const money = n => '$' + n.toFixed(2);
+
+  function media(p){ return `<div class="ph"><span class="pt">SWAGG</span><span class="pn">${p.name}</span></div>
+    <img src="shop/${p.id}.jpg" alt="${p.name}" onerror="this.remove()">`; }
+
+  /* ── GRID ─────────────────────────────────── */
+  const grid = document.getElementById('shopGrid');
+  const ACCENT = new Set([6, 10]);      // lime accent tiles (placeholder pieces)
+  function productTile(p, i){
+    if(p.soon){
+      return `<article class="tile soon">
+        <div class="tile-media">
+          <div class="ph"><span class="pt">Coming Soon</span><span class="pn">${p.name}</span></div>
+        </div>
+        <div class="tile-foot"><span class="tile-name">${p.name}</span><span class="tile-price soon-tag">Coming Soon</span></div>
+        <div class="tile-cat"><i></i>${p.cat}</div>
+      </article>`;
+    }
+    return `<article class="tile${ACCENT.has(i)?' accent':''}" data-id="${p.id}">
+      <div class="tile-media">
+        <div class="ph"><span class="pt">SWAGG</span><span class="pn">${p.name}</span></div>
+        <img style="object-position:${p.pos||'50% 8%'}" src="shop/${p.id}.jpg" alt="${p.name}" onerror="this.remove()">
+        <img class="alt" style="object-position:${p.pos||'50% 8%'}" src="shop/${p.id}-2.jpg" alt="" onerror="this.remove()">
+        <div class="view-more">View More</div>
+      </div>
+      <div class="tile-foot"><span class="tile-name">${p.name}</span><span class="tile-price">${money(p.price)}</span></div>
+      <div class="tile-cat"><i></i>${p.cat}</div>
+    </article>`;
+  }
+  function featureTile(img, cap, mod){
+    return `<article class="tile feature ${mod}">
+      <div class="tile-media"><img src="shop/${img}.jpg" alt="${cap}" onerror="this.remove()"></div>
+      <div class="tile-foot"><span class="tile-name">${cap}</span></div>
+      <div class="tile-cat"><i></i>Lifestyle</div>
+    </article>`;
+  }
+  const items = [];
+  PRODUCTS.forEach((p,i)=>{
+    items.push(productTile(p, i));
+    if(i === 2) items.push(featureTile('lifestyle-hero', 'SWAGG · Drop 01', 'full'));  // hero band below the 3 hoodies
+    if(p.id === 'tee-03') items.push(featureTile('maine-way-hero', 'The Maine Way', 'full'));  // hero supporting the tees
+  });
+  grid.innerHTML = items.join('');
+  grid.addEventListener('click', e=>{ const t = e.target.closest('.tile'); if(t && t.dataset.id) openProduct(t.dataset.id); });
+
+  /* staggered animate-in as tiles enter the viewport (with fail-safes so content always shows) */
+  const tiles = [...document.querySelectorAll('.tile')];
+  const revealTile = t => t.classList.add('in');
+  if('IntersectionObserver' in window){
+    const tileObs = new IntersectionObserver((entries)=>{
+      entries.filter(e=>e.isIntersecting).forEach((e,k)=>{
+        setTimeout(()=> revealTile(e.target), k * 90);
+        tileObs.unobserve(e.target);
+      });
+    }, { threshold:0.1, rootMargin:'0px 0px -5% 0px' });
+    tiles.forEach(t => tileObs.observe(t));
+    // failsafe: never leave tiles hidden if the observer doesn't fire (embedded webviews etc.)
+    setTimeout(()=> tiles.forEach(revealTile), 2200);
+  } else {
+    tiles.forEach(revealTile);
+  }
+
+  /* masthead reveal — fire after first paint so the transition plays, with a timeout backstop */
+  const ready = () => document.body.classList.add('ready');
+  requestAnimationFrame(()=> requestAnimationFrame(ready));
+  setTimeout(ready, 400);
+
+  /* ── PRODUCT MODAL ───────────────────────── */
+  const pmOverlay = document.getElementById('pmOverlay');
+  const pm = document.getElementById('pm');
+  let pmState = { id:null, size:null, qty:1 };
+  function openProduct(id){
+    const p = byId(id);
+    const prodPos = p.pos || '50% 6%';
+    // only the zip hoodies centre their detail shots so the sleeve patch isn't cropped
+    const imgPos = k => (p.cat === 'Hoodies' && k !== 0) ? '50% 50%' : prodPos;
+    const variants = p.variants || [{ name:p.name, color:p.color, gallery: p.gallery || [p.id, p.id + '-2'] }];
+    const v = variants[0];
+    pmState = { id, size:null, qty:1, vi:0 };
+    const thumbsHtml = g => g.map((s,k)=>`<button class="pm-thumb${k===0?' active':''}" data-src="shop/${s}.jpg" data-pos="${imgPos(k)}" type="button"><img style="object-position:${imgPos(k)}" src="shop/${s}.jpg" alt="" onerror="this.closest('.pm-thumb').remove()"></button>`).join('');
+    pm.innerHTML = `
+      <button class="pm-close" id="pmClose" aria-label="Close">&times;</button>
+      <div class="pm-media">
+        <div class="ph"><span class="pt">SWAGG</span><span class="pn">${p.name}</span></div>
+        <img class="pm-main" style="object-position:${prodPos}" src="shop/${v.gallery[0]}.jpg" alt="${v.name}" onerror="this.style.visibility='hidden'">
+        ${v.gallery.length > 1 ? `<div class="pm-thumbs">${thumbsHtml(v.gallery)}</div>` : ''}
+      </div>
+      <div class="pm-body">
+        <div class="pm-cat" id="pmCat">${p.cat} · ${v.color}</div>
+        <h2 class="pm-name" id="pmName">${v.name}</h2>
+        <div class="pm-price">${money(p.price)}</div>
+        <p class="pm-desc">${p.desc}</p>
+        ${p.sizes.length > 1 ? '<div class="pm-fit"><b>Fit</b>Model is 6ft 2in / 1.88m and wears Medium. Loose fit. True to size, we recommend ordering your usual size.</div>' : ''}
+        ${variants.length > 1 ? `<div class="pm-label">Color</div>
+        <div class="pm-colors">${variants.map((vv,k)=>`<button class="pm-color${k===0?' active':''}" data-vi="${k}" style="--sw:${vv.sw}" title="${vv.color}" aria-label="${vv.color}"></button>`).join('')}</div>` : ''}
+        <div class="pm-label">Select Size</div>
+        <div class="pm-sizes">${p.sizes.map(s=>`<button class="size-btn" data-size="${s}">${s}</button>`).join('')}</div>
+        <div class="pm-qtyrow">
+          <div class="pm-label" style="margin:0">Qty</div>
+          <div class="qty"><button data-q="-1">−</button><span id="pmQty">1</span><button data-q="1">+</button></div>
+        </div>
+        <button class="pm-cta disabled" id="pmAdd">Select a size</button>
+      </div>`;
+    pmOverlay.classList.add('open'); document.body.style.overflow='hidden';
+    if(p.sizes.length === 1){ pmState.size = p.sizes[0]; pm.querySelector('.size-btn').classList.add('active'); refreshPmCta(); }
+  }
+  function closeProduct(){ pmOverlay.classList.remove('open'); document.body.style.overflow=''; }
+  function refreshPmCta(){
+    const cta = document.getElementById('pmAdd');
+    if(pmState.size){ cta.classList.remove('disabled'); cta.textContent = 'Add to Bag · ' + money(byId(pmState.id).price * pmState.qty); }
+    else { cta.classList.add('disabled'); cta.textContent = 'Select a size'; }
+  }
+  function selectVariant(vi){
+    const p = byId(pmState.id); if(!p || !p.variants) return;
+    const v = p.variants[vi]; if(!v) return;
+    pmState.vi = vi;
+    const prodPos = p.pos || '50% 6%';
+    const imgPos = k => (p.cat === 'Hoodies' && k !== 0) ? '50% 50%' : prodPos;
+    const main = pm.querySelector('.pm-main');
+    main.src = `shop/${v.gallery[0]}.jpg`; main.style.visibility='visible'; main.style.objectPosition = prodPos;
+    const thumbs = pm.querySelector('.pm-thumbs');
+    if(thumbs) thumbs.innerHTML = v.gallery.map((s,k)=>`<button class="pm-thumb${k===0?' active':''}" data-src="shop/${s}.jpg" data-pos="${imgPos(k)}" type="button"><img style="object-position:${imgPos(k)}" src="shop/${s}.jpg" alt="" onerror="this.closest('.pm-thumb').remove()"></button>`).join('');
+    const nameEl = pm.querySelector('#pmName'); if(nameEl) nameEl.textContent = v.name;
+    const catEl = pm.querySelector('#pmCat'); if(catEl) catEl.textContent = p.cat + ' · ' + v.color;
+    pm.querySelectorAll('.pm-color').forEach(b=>b.classList.toggle('active', +b.dataset.vi === vi));
+  }
+  pm.addEventListener('click', e=>{
+    if(e.target.closest('#pmClose')) return closeProduct();
+    const cv = e.target.closest('[data-vi]');
+    if(cv){ selectVariant(+cv.dataset.vi); return; }
+    const th = e.target.closest('.pm-thumb');
+    if(th){ const main = pm.querySelector('.pm-main');
+      main.src = th.dataset.src; main.style.visibility = 'visible';
+      if(th.dataset.pos) main.style.objectPosition = th.dataset.pos;
+      pm.querySelectorAll('.pm-thumb').forEach(b=>b.classList.remove('active')); th.classList.add('active'); return; }
+    const s = e.target.closest('[data-size]');
+    if(s){ pmState.size = s.dataset.size; pm.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active')); s.classList.add('active'); refreshPmCta(); return; }
+    const q = e.target.closest('[data-q]');
+    if(q){ pmState.qty = Math.max(1, pmState.qty + (+q.dataset.q)); document.getElementById('pmQty').textContent = pmState.qty; refreshPmCta(); return; }
+    if(e.target.id === 'pmAdd' && pmState.size){ addToCart(pmState.id, pmState.size, pmState.qty, pmState.vi); closeProduct(); }
+  });
+  pmOverlay.addEventListener('click', e=>{ if(e.target === pmOverlay) closeProduct(); });
+
+  /* shipping & returns modal */
+  const infoOverlay = document.getElementById('infoOverlay');
+  const openInfo = () => { infoOverlay.classList.add('open'); document.body.style.overflow='hidden'; };
+  const closeInfo = () => { infoOverlay.classList.remove('open'); document.body.style.overflow=''; };
+  document.getElementById('shipInfoLink').addEventListener('click', e=>{ e.preventDefault(); openInfo(); });
+  infoOverlay.addEventListener('click', e=>{ if(e.target === infoOverlay || e.target.closest('#infoClose')) closeInfo(); });
+
+  /* ── CART ─────────────────────────────────── */
+  let cart = [];
+  try { cart = JSON.parse(localStorage.getItem('swagg-cart')) || []; } catch(e){ cart = []; }
+  cart = cart.filter(l => byId(l.id));   // drop any saved lines for products no longer in the drop
+  const saveCart = () => { try { localStorage.setItem('swagg-cart', JSON.stringify(cart)); } catch(e){} };
+  const variantOf = (p, vi) => (p.variants && p.variants[vi||0]) || { name:p.name, color:p.color, gallery: p.gallery || [p.id, p.id+'-2'] };
+  function addToCart(id, size, qty, vi){
+    vi = vi || 0;
+    const line = cart.find(l => l.id === id && l.size === size && (l.vi||0) === vi);
+    if(line) line.qty += qty; else cart.push({ id, size, qty, vi });
+    saveCart(); renderCart(); toast(`${variantOf(byId(id), vi).name} added`);
+  }
+  function setQty(idx, d){ cart[idx].qty += d; if(cart[idx].qty < 1) cart.splice(idx,1); saveCart(); renderCart(); }
+  function removeLine(idx){ cart.splice(idx,1); saveCart(); renderCart(); }
+  const cartCountEl = document.getElementById('cartCount');
+  function subtotal(){ return cart.reduce((s,l)=> s + byId(l.id).price * l.qty, 0); }
+  const cartItems = document.getElementById('cartItems');
+  function renderCart(){
+    cartCountEl.textContent = cart.reduce((s,l)=>s+l.qty,0);
+    document.getElementById('cartSubtotal').textContent = money(subtotal());
+    if(!cart.length){ cartItems.innerHTML = `<div class="cart-empty">Your bag is empty.<br>Time to gear up.</div>`; return; }
+    cartItems.innerHTML = cart.map((l,i)=>{ const p = byId(l.id); const v = variantOf(p, l.vi);
+      return `<div class="ci">
+        <div class="ci-media"><img style="object-position:${p.pos||'50% 8%'}" src="shop/${v.gallery[0]}.jpg" alt="" onerror="this.remove()"></div>
+        <div class="ci-mid">
+          <div class="ci-name">${v.name}</div>
+          <div class="ci-meta">${v.color} · ${l.size}</div>
+          <div class="ci-qty"><button data-dec="${i}">−</button><span>${l.qty}</span><button data-inc="${i}">+</button></div>
+        </div>
+        <div class="ci-right"><div class="ci-price">${money(p.price * l.qty)}</div><button class="ci-remove" data-rm="${i}">Remove</button></div>
+      </div>`; }).join('');
+  }
+  cartItems.addEventListener('click', e=>{
+    const inc = e.target.closest('[data-inc]'), dec = e.target.closest('[data-dec]'), rm = e.target.closest('[data-rm]');
+    if(inc) setQty(+inc.dataset.inc, 1); else if(dec) setQty(+dec.dataset.dec, -1); else if(rm) removeLine(+rm.dataset.rm);
+  });
+  const cartDrawer = document.getElementById('cartDrawer'), cartScrim = document.getElementById('cartScrim');
+  function openCart(){ cartDrawer.classList.add('open'); cartScrim.classList.add('open'); document.body.style.overflow='hidden'; }
+  function closeCart(){ cartDrawer.classList.remove('open'); cartScrim.classList.remove('open'); document.body.style.overflow=''; }
+  document.getElementById('cartOpen').addEventListener('click', openCart);
+  document.getElementById('cartClose').addEventListener('click', closeCart);
+  cartScrim.addEventListener('click', closeCart);
+  document.getElementById('cartCheckout').addEventListener('click', ()=>{ toast(cart.length ? 'Checkout coming soon' : 'Your bag is empty'); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeProduct(); closeCart(); closeInfo(); } });
+
+  let toastT; const toastEl = document.getElementById('toast');
+  function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(()=> toastEl.classList.remove('show'), 1800); }
+
+  renderCart();
+</script>
+</body>
+</html>
