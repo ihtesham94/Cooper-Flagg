@@ -1556,15 +1556,23 @@
 
   const DPR = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
 
+  // Size the canvas to the stable hero element (height:100vh) — NOT window.innerHeight,
+  // which jitters as the iOS address bar hides/shows and makes the frame pop in size.
+  const heroStage = document.getElementById('hero-sticky');
   function resizeCanvas() {
-    canvas.width  = Math.floor(window.innerWidth  * DPR);
-    canvas.height = Math.floor(window.innerHeight * DPR);
-    canvas.style.width  = window.innerWidth  + 'px';
-    canvas.style.height = window.innerHeight + 'px';
+    const w = heroStage.clientWidth, h = heroStage.clientHeight;
+    canvas.width  = Math.floor(w * DPR);
+    canvas.height = Math.floor(h * DPR);
+    canvas.style.width = '';   // let CSS (inset:0; width/height:100%) drive display size
+    canvas.style.height = '';
     lastDrawn = -1;
     drawFrameIndex(Math.round(currentFrame));
   }
-  window.addEventListener('resize', resizeCanvas);
+  let lastVW = window.innerWidth;
+  window.addEventListener('resize', () => {
+    // on mobile, only re-size on a real width change (orientation) — ignore address-bar height changes
+    if (!isMobile || window.innerWidth !== lastVW) { lastVW = window.innerWidth; resizeCanvas(); }
+  });
   resizeCanvas();
 
   function drawFrameIndex(i) {
