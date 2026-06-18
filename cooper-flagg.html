@@ -1676,11 +1676,11 @@
     end: 'bottom bottom',
     onUpdate:    self => { targetFrame = self.progress * (COUNT - 1);
                            heroProgress = self.progress; if (arena && audioStarted) arena.volume = heroVol(); },
-    onLeave:     ()   => { targetFrame = COUNT - 1; if (arena) arena.pause();
-                           if (soundBtn) soundBtn.classList.remove('show'); },                 // hero ended → stop + hide toggle
+    onLeave:     ()   => { targetFrame = COUNT - 1; if (arena) arena.volume = 0;   // silent, but keep playing so it can fade back in
+                           if (soundBtn) soundBtn.classList.remove('show'); },
     onLeaveBack: ()   => { targetFrame = 0; },
     onEnterBack: self => { targetFrame = self.progress * (COUNT - 1);
-                           if (arena && audioStarted && soundOn) arena.play().catch(() => {});
+                           if (arena && audioStarted && soundOn) { arena.play().catch(() => {}); arena.volume = heroVol(); }
                            if (soundBtn) soundBtn.classList.add('show'); },
   });
 
