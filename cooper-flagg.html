@@ -69,8 +69,9 @@
     .sound-toggle{ position:fixed; left:24px; bottom:24px; z-index:120; width:44px; height:44px;
       border-radius:50%; border:1px solid rgba(140,184,0,0.4); background:rgba(0,26,24,0.55);
       backdrop-filter:blur(8px); cursor:pointer; display:flex; align-items:center; justify-content:center;
-      opacity:0; transform:translateY(8px); transition:opacity .5s ease, transform .5s ease, border-color .2s; }
-    .sound-toggle.show{ opacity:1; transform:none; }
+      opacity:0; transform:translateY(8px); pointer-events:none;
+      transition:opacity .5s ease, transform .5s ease, border-color .2s; }
+    .sound-toggle.show{ opacity:1; transform:none; pointer-events:auto; }
     .sound-toggle:hover{ border-color:var(--lime); }
     .snd-bars{ display:flex; align-items:center; gap:3px; height:16px; }
     .snd-bars i{ width:2.5px; height:100%; background:var(--lime); border-radius:2px; transform-origin:center;
@@ -1640,14 +1641,14 @@
   // ── ARENA AMBIENCE ───────────────────────────
   const arena     = document.getElementById('arenaAudio');
   const soundBtn  = document.getElementById('soundToggle');
-  const MAX_VOL   = 0.4;
+  const MAX_VOL   = 0.18;
   let audioStarted = false;
   let soundOn      = true;
   let heroProgress = 0;
 
   function heroVol() {
-    // full under the hero, fades out over the last 35% of the hero scroll
-    const fade = heroProgress < 0.65 ? 1 : Math.max(0, (1 - heroProgress) / 0.35);
+    // gentle, gradual fade across most of the hero scroll
+    const fade = heroProgress < 0.35 ? 1 : Math.max(0, (1 - heroProgress) / 0.65);
     return soundOn ? MAX_VOL * fade : 0;
   }
   function startAudio() {
@@ -1675,10 +1676,12 @@
     end: 'bottom bottom',
     onUpdate:    self => { targetFrame = self.progress * (COUNT - 1);
                            heroProgress = self.progress; if (arena && audioStarted) arena.volume = heroVol(); },
-    onLeave:     ()   => { targetFrame = COUNT - 1; if (arena) arena.pause(); },        // hero ended → stop
+    onLeave:     ()   => { targetFrame = COUNT - 1; if (arena) arena.pause();
+                           if (soundBtn) soundBtn.classList.remove('show'); },                 // hero ended → stop + hide toggle
     onLeaveBack: ()   => { targetFrame = 0; },
     onEnterBack: self => { targetFrame = self.progress * (COUNT - 1);
-                           if (arena && audioStarted && soundOn) arena.play().catch(() => {}); },
+                           if (arena && audioStarted && soundOn) arena.play().catch(() => {});
+                           if (soundBtn) soundBtn.classList.add('show'); },
   });
 
   // Refresh ScrollTrigger after all assets load to fix mis-calculated positions
