@@ -1394,21 +1394,17 @@
 
   // ── LENIS SMOOTH SCROLL ─────────────────────
   // Disabled on mobile — iOS native scroll is far smoother for video scrubbing
-  // Smooth scroll on desktop only — on mobile we use native scroll (Lenis on touch caused jank/drag)
-  let lenis = null;
-  if (!isMobile) {
-    lenis = new Lenis({
-      duration:        0.9,
-      easing:          t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel:     true,
-      smoothTouch:     false,
-      wheelMultiplier: 1.0,
-      touchMultiplier: 1.0,
-    });
-    lenis.on('scroll', ScrollTrigger.update);
-    gsap.ticker.add(time => lenis.raf(time * 1000));
-    gsap.ticker.lagSmoothing(0);
-  }
+  let lenis = new Lenis({
+    duration:        isMobile ? 0 : 0.9,
+    easing:          t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    smoothWheel:     !isMobile,
+    smoothTouch:     false,
+    wheelMultiplier: 1.0,
+    touchMultiplier: 1.0,
+  });
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add(time => lenis.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
 
   // smooth-scroll for in-page nav anchors
   document.querySelectorAll('a[href^="#"]').forEach(a => {
