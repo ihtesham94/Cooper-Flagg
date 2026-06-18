@@ -1539,9 +1539,9 @@
   // Mobile uses a lighter, pre-cropped, half-resolution frame set, every 2nd frame,
   // so the whole sequence fits in memory and decodes up front (no eviction = no jumps).
   const SRC_FRAMES = 94;
-  const STEP       = isMobile ? 2 : 1;
+  const STEP       = 1;                       // all frames on both, so motion stays continuous
   const FRAME_DIR  = isMobile ? 'frames-mobile/' : 'frames/';
-  const FRAME_VER  = isMobile ? 'v=cfheroM1' : 'v=cfhero2';
+  const FRAME_VER  = isMobile ? 'v=cfheroM2' : 'v=cfhero2';
   const frameNums  = [];
   for (let i = 0; i < SRC_FRAMES; i += STEP) frameNums.push(i);
   if (frameNums[frameNums.length - 1] !== SRC_FRAMES - 1) frameNums.push(SRC_FRAMES - 1);
@@ -1554,7 +1554,7 @@
   let currentFrame = 0;
   let lastDrawn    = -1;
 
-  const DPR = Math.min(window.devicePixelRatio || 1, isMobile ? 2 : 2);
+  const DPR = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
 
   function resizeCanvas() {
     canvas.width  = Math.floor(window.innerWidth  * DPR);
@@ -1597,7 +1597,7 @@
     else { img.onload = done; img.onerror = done; }
   });
 
-  const LERP = isMobile ? 0.2 : 0.18;
+  const LERP = isMobile ? 1 : 0.18;   // mobile: map frame directly to scroll (glued, no catch-up lag)
 
   (function scrubLoop() {
     currentFrame += (targetFrame - currentFrame) * LERP;
