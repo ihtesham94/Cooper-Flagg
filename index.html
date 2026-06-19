@@ -1638,29 +1638,34 @@
   // respected on iPhone, so the scroll-driven fade actually works.
   const soundBtn  = document.getElementById('soundToggle');
   const heroEl    = document.getElementById('hero');
+  const arenaEl   = document.getElementById('arenaAudio');   // fallback source
   const MAX_VOL   = 0.18;
   let soundOn    = true;
-  let audioReady = false;   // buffer is decoded and playing through the gain node
+  let audioReady = false;   // audio is playing (buffer through gain, or element fallback)
   let starting   = false;
   let audioCtx = null, gainNode = null;
 
   // Volume recomputed from the LIVE hero scroll position every frame (in the scrub loop below):
   // full early, smooth fade, fully silent by ~70% of the hero — and silent everywhere after it.
   function updateArenaVolume() {
-    if (!audioReady || !gainNode) return;
+    if (!audioReady) return;
     const total = heroEl.offsetHeight - window.innerHeight;
     const p = total > 0 ? Math.min(1, Math.max(0, -heroEl.getBoundingClientRect().top / total)) : 0;
     let f;
     if (p <= 0.1) f = 1;
     else if (p >= 0.7) f = 0;
     else { const t = (p - 0.1) / 0.6; f = Math.cos(t * Math.PI / 2); }
-    gainNode.gain.value = soundOn ? MAX_VOL * f : 0;
+    const vol = soundOn ? MAX_VOL * f : 0;
+    if (gainNode) gainNode.gain.value = vol;        // primary: Web Audio gain (works on iOS)
+    else if (arenaEl) arenaEl.volume = vol;         // fallback: element volume (desktop)
   }
   async function startAudio() {
     if (audioReady || starting) return;
     starting = true;
+    // Primary path — decode to buffer + GainNode (the only thing that fades correctly on iOS)
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) throw new Error('no-webaudio');
       audioCtx = new AC();
       gainNode = audioCtx.createGain();
       gainNode.gain.value = 0;
@@ -1674,7 +1679,13 @@
       src.connect(gainNode);
       src.start(0);
       audioReady = true;
-    } catch (e) { starting = false; }
+      return;
+    } catch (e) { audioCtx = null; gainNode = null; }
+    // Fallback path — plain <audio> element (at least gives sound on desktop)
+    try {
+      if (arenaEl) { arenaEl.volume = 0; await arenaEl.play(); audioReady = true; return; }
+    } catch (e) {}
+    starting = false;
   }
   // browsers require a gesture before sound — start on the first interaction (retry until it sticks)
   ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev =>
