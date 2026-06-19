@@ -523,7 +523,7 @@
     }
     .stmt-reveal .rw { color: var(--light); opacity: 0.16; will-change: opacity; }
     @media (max-width: 768px) {
-      #statement { margin-top: -20vh; }        /* moderate pull — closes the gap, no clip */
+      #statement { margin-top: 0; }            /* no pull — let the held DIRIGO have its own beat */
       .stmt-sticky { padding: 54px 24px; }
       .stmt-eyebrow { margin-bottom: 38px; }   /* more breathing above the text */
       .stmt-reveal { font-size: clamp(22px, 6vw, 32px); line-height: 1.34; }
@@ -999,7 +999,10 @@
     .mt-card-stats .n{ font-family:var(--fd); font-size:21px; color:var(--lime); line-height:1; }
     .mt-card-stats .l{ font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:3px; }
     .mt-card-hint{ font-family:var(--fm); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
-    .mt-end{ text-align:center; padding:24px 24px 24px; }
+    /* DIRIGO holds centred on screen for a beat before the statement scrolls in */
+    .mt-end{ position:relative; height:150vh; }
+    .mt-end-inner{ position:sticky; top:0; height:100vh; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; text-align:center; padding:0 26px; }
     .mt-end .e-eyebrow{ font-family:var(--fm); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime); margin-bottom:14px; }
     .mt-end .e-h{ font-family:var(--fd); font-size:clamp(40px,13vw,56px); line-height:.9; white-space:nowrap; text-transform:uppercase; }
     .mt-end .e-h em{ font-style:normal; color:var(--lime); }
@@ -1270,8 +1273,10 @@
       <div class="mt-spine"><div class="mt-fill" id="jMtFill"></div></div>
     </div>
     <div class="mt-end">
-      <div class="e-h">DIRIGO. <em>I lead.</em></div>
-      <div class="e-p">From the smallest town in Maine to the biggest stage in the NBA.</div>
+      <div class="mt-end-inner">
+        <div class="e-h">DIRIGO. <em>I lead.</em></div>
+        <div class="e-p">From the smallest town in Maine to the biggest stage in the NBA.</div>
+      </div>
     </div>
   </div>
 </section>
