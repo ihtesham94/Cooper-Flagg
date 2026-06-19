@@ -1005,6 +1005,7 @@
     .mt-end-inner{ position:sticky; top:0; height:100vh; background:var(--dark);
       display:flex; flex-direction:column; align-items:center; justify-content:center;
       text-align:center; padding:0 26px; will-change:opacity; }
+    .mt-end-text{ will-change:opacity; }
     .mt-end .e-eyebrow{ font-family:var(--fm); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--lime); margin-bottom:14px; }
     .mt-end .e-h{ font-family:var(--fd); font-size:clamp(40px,13vw,56px); line-height:.9; white-space:nowrap; text-transform:uppercase; }
     .mt-end .e-h em{ font-style:normal; color:var(--lime); }
@@ -1276,8 +1277,10 @@
     </div>
     <div class="mt-end">
       <div class="mt-end-inner">
-        <div class="e-h">DIRIGO. <em>I lead.</em></div>
-        <div class="e-p">From the smallest town in Maine to the biggest stage in the NBA.</div>
+        <div class="mt-end-text">
+          <div class="e-h">DIRIGO. <em>I lead.</em></div>
+          <div class="e-p">From the smallest town in Maine to the biggest stage in the NBA.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -1875,7 +1878,9 @@
     const n = rws.length;
     const stmtSec = document.getElementById('statement');
     const stmtLogo = document.querySelector('.stmt-logo');
-    const mtEnd = document.querySelector('#j-mobile .mt-end-inner');   // mobile "DIRIGO. I lead." panel
+    const mtPanel  = document.querySelector('#j-mobile .mt-end-inner');   // solid DIRIGO panel
+    const mtText   = document.querySelector('#j-mobile .mt-end-text');    // DIRIGO wording
+    const mtEndSec = document.querySelector('#j-mobile .mt-end');         // tall container (drives timing)
     const clampN = (v,a,b)=>Math.min(b,Math.max(a,v));
     // Direct scroll-driven highlight: words start dim grey and brighten to white
     // as a "head" sweeps through them while the section scrolls past.
@@ -1883,8 +1888,13 @@
       const vh = window.innerHeight;
       const rect = stmtSec.getBoundingClientRect();
       // Mobile: fade out "DIRIGO. I lead." as this section scrolls up into view
-      // Hold DIRIGO solid for a beat, then crossfade to the statement behind it.
-      if (mtEnd) mtEnd.style.opacity = clampN(rect.top / (vh * 0.25), 0, 1).toFixed(3);
+      // Sequential (never simultaneous): hold DIRIGO → fade its TEXT out on the solid panel →
+      // then fade the PANEL to reveal the statement behind it. No text ever overlaps.
+      if (mtPanel && mtText && mtEndSec) {
+        const into = -mtEndSec.getBoundingClientRect().top;            // px scrolled into the block
+        mtText.style.opacity  = clampN((vh * 0.25 - into) / (vh * 0.15), 0, 1).toFixed(3);  // stage 1
+        mtPanel.style.opacity = clampN((vh * 0.45 - into) / (vh * 0.20), 0, 1).toFixed(3);  // stage 2
+      }
       // Logo entrance — begins once the section is centred (rect.top ≤ 0) and
       // eases in + scales down over the next ~0.7 screens, so it's clearly seen.
       if (stmtLogo) {
