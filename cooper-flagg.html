@@ -1647,6 +1647,7 @@
   let audioReady = false;
   let wantsStart = false;
   let audioCtx = null, gainNode = null, arenaBuffer = null;
+  let iosUnlocked = false;
   let dbgErr = '', dbgStage = 'start';
   const dbgEl = document.getElementById('audioDbg');
   function updateAudioDbg() {
@@ -1656,6 +1657,7 @@
     const g = gainNode ? gainNode.gain.value : (arenaEl ? arenaEl.volume : 0);
     dbgEl.textContent = 'state:' + (audioCtx ? audioCtx.state : 'NO-CTX') +
       ' ready:' + (audioReady ? 'YES' : 'no') +
+      ' unlk:' + (iosUnlocked ? 'YES' : 'no') +
       ' buf:' + (arenaBuffer ? 'YES' : 'no') +
       ' p:' + p.toFixed(2) + ' gain:' + g.toFixed(3) +
       ' [' + dbgStage + ']' + (dbgErr ? ' ERR:' + dbgErr : '');
@@ -1703,8 +1705,19 @@
       if (arenaEl && !audioReady) { arenaEl.volume = 0; arenaEl.play().then(() => { audioReady = true; }).catch(() => {}); }
       return;
     }
-    // ALWAYS resume the engine inside the gesture — this is what unlocks audio on iOS.
-    // Resume unconditionally so iOS's 'suspended' AND 'interrupted' states are both handled.
+    // iOS OUTPUT UNLOCK — the critical bit. iOS only opens audio output if a buffer is
+    // STARTED inside a real user gesture. Play a 1-sample silent blip here, every gesture
+    // until it sticks, so the looping arena sound (which may have started outside a gesture)
+    // actually becomes audible.
+    if (!iosUnlocked) {
+      try {
+        audioCtx.resume();
+        const b = audioCtx.createBuffer(1, 1, 22050);
+        const s = audioCtx.createBufferSource();
+        s.buffer = b; s.connect(audioCtx.destination); s.start(0);
+        iosUnlocked = true;
+      } catch (e) {}
+    }
     audioCtx.resume().catch(() => {});
     if (audioReady) return;
     if (arenaBuffer && gainNode) {
