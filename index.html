@@ -54,11 +54,16 @@
     /* ── Desktop ENTER gate ── */
     #enterGate {
       position: fixed; inset: 0; z-index: 300;
-      background: var(--darker);
+      background: rgba(0, 16, 15, 0.45);                          /* dim the hero behind it */
+      backdrop-filter: grayscale(0.6) brightness(0.5);           /* greyed-out look */
+      -webkit-backdrop-filter: grayscale(0.6) brightness(0.5);
       display: flex; align-items: center; justify-content: center;
-      transition: opacity .7s ease, visibility .7s ease;
+      transition: opacity .8s ease, visibility .8s ease;
     }
     #enterGate.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    /* While the gate is up, the nav and scroll cue stay hidden; they fade in on ENTER */
+    #nav, #scrollHint { transition: opacity .7s ease; }
+    body.gating #nav, body.gating #scrollHint { opacity: 0 !important; pointer-events: none; }
     #enterBtn {
       font-family: var(--fm); font-weight: 400;
       text-transform: uppercase; letter-spacing: .38em;
@@ -1778,15 +1783,17 @@
     if (isMobile) {
       enterGate.remove();
     } else {
-      if (lenis && lenis.stop) lenis.stop();      // hold the page at the top until they enter
+      document.body.classList.add('gating');      // hide nav + scroll cue behind the gate
+      if (lenis && lenis.stop) lenis.stop();       // hold the page at the top until they enter
       document.body.style.overflow = 'hidden';
       const enterSite = () => {
         startAudio();                              // valid click gesture → unlocks + plays audio
         enterGate.classList.add('hidden');
+        document.body.classList.remove('gating');  // nav + scroll cue fade in
         document.body.style.overflow = '';
         window.scrollTo(0, 0);
         if (lenis && lenis.start) lenis.start();
-        setTimeout(() => { if (enterGate.parentNode) enterGate.remove(); }, 800);
+        setTimeout(() => { if (enterGate.parentNode) enterGate.remove(); }, 900);
       };
       enterBtn.addEventListener('click', enterSite);
     }
