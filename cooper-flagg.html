@@ -950,8 +950,11 @@
       .j-modal-stat .n{ font-size:33px; }
       .j-modal-stat .l{ font-size:9.5px; letter-spacing:.12em; margin-top:7px; }
       .j-modal-body{ font-size:14.5px; line-height:1.8; margin-bottom:28px; text-wrap:pretty; }
-      .j-modal-gallery{ grid-template-columns:1fr; }
-      .j-modal-gallery img, .j-modal-gallery.single img{ height:300px; }
+      /* images: full width (never bleed), consistent balanced ratio, no distortion */
+      .j-modal-gallery{ grid-template-columns:1fr; gap:14px; }
+      .j-modal-gallery img, .j-modal-gallery.single img{
+        width:100%; max-width:100%; height:auto; aspect-ratio:5/4;
+        object-fit:cover; object-position:center; display:block; border-radius:12px; }
     }
 
     /* Mobile vertical spine */
