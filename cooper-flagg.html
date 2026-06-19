@@ -1686,7 +1686,7 @@
   const soundBtn  = document.getElementById('soundToggle');
   const heroEl    = document.getElementById('hero');
   const arenaEl   = document.getElementById('arenaAudio');   // last-ditch fallback
-  const MAX_VOL   = 0.22;
+  const MAX_VOL   = isMobile ? 0.22 : 0.6;   // desktop pushed up — far easier to hear on Mac speakers
   let soundOn    = true;
   let audioReady = false;
   let wantsStart = false;
