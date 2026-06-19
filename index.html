@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cooper Flagg</title>
 
-  <!-- Download the arena audio first, before the 94 hero frames saturate the network -->
-  <link rel="preload" as="fetch" href="audio/arena.mp3?v=2" fetchpriority="high">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
@@ -1723,7 +1720,7 @@
       wantsStart = true;   // still decoding — initAudio() will start it the moment it's ready
     }
   }
-  ['pointerdown', 'touchstart', 'keydown', 'wheel', 'click'].forEach(ev =>
+  ['pointerdown', 'touchstart', 'touchmove', 'keydown', 'wheel', 'click', 'scroll'].forEach(ev =>
     window.addEventListener(ev, startAudio, { passive: true }));
   // iOS leaks the audio engine across refreshes (only a few allowed on the hardware) which
   // makes audio die after the first load. Close it on real page exits to free the hardware.
