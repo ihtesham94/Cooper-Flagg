@@ -2096,7 +2096,7 @@
 
     const jMobile = window.matchMedia('(max-width:768px)').matches;
     let targetZ=0, currentZ=0, currentPan=0, jHover=false;
-    const stops = M.map((_,i)=>i*Z_GAP); stops.push(MAX_Z);
+    const stops = M.map((_,i)=>i*Z_GAP); stops.push(MAX_Z); stops.push(MAX_Z);   // extra MAX_Z = a hold where "DIRIGO. I lead." pauses on screen
     const segs = stops.length-1;
     const smoother = t=>t*t*t*(t*(t*6-15)+10);
 
@@ -2125,7 +2125,7 @@
     if(!jMobile){
       const navLogo = document.getElementById('nav-logo');
       ScrollTrigger.create({
-        trigger:'#journey', start:'top top', end:'+=7000',
+        trigger:'#journey', start:'top top', end:'+=7800',
         pin:'#journey-stage', anticipatePin:1, invalidateOnRefresh:true,
         onUpdate: self => setProgress(self.progress),
         onToggle: self => {           // hide the big corner logo while in the hallway
