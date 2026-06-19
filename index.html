@@ -1633,17 +1633,17 @@
   const LERP = isMobile ? 1 : 0.18;   // mobile: map frame directly to scroll (glued, no catch-up lag)
 
   // ── ARENA AMBIENCE ───────────────────────────
-  // iOS ignores audio.volume AND outputs silence when an <audio> is routed via Web Audio.
-  // So we decode the file into a buffer and play it through a GainNode — gain is fully
-  // respected on iPhone, so the scroll-driven fade actually works.
+  // iOS rules: (1) audio.volume is ignored, so volume MUST go through a Web Audio GainNode;
+  // (2) the sound must START synchronously inside the user gesture — no async work in between.
+  // So we decode the buffer AHEAD of time on load, then only call start() on first interaction.
   const soundBtn  = document.getElementById('soundToggle');
   const heroEl    = document.getElementById('hero');
-  const arenaEl   = document.getElementById('arenaAudio');   // fallback source
+  const arenaEl   = document.getElementById('arenaAudio');   // last-ditch fallback
   const MAX_VOL   = 0.18;
   let soundOn    = true;
-  let audioReady = false;   // audio is playing (buffer through gain, or element fallback)
-  let starting   = false;
-  let audioCtx = null, gainNode = null;
+  let audioReady = false;
+  let wantsStart = false;
+  let audioCtx = null, gainNode = null, arenaBuffer = null;
 
   // Volume recomputed from the LIVE hero scroll position every frame (in the scrub loop below):
   // full early, smooth fade, fully silent by ~70% of the hero — and silent everywhere after it.
@@ -1657,46 +1657,56 @@
     else { const t = (p - 0.1) / 0.6; f = Math.cos(t * Math.PI / 2); }
     const vol = soundOn ? MAX_VOL * f : 0;
     if (gainNode) gainNode.gain.value = vol;        // primary: Web Audio gain (works on iOS)
-    else if (arenaEl) arenaEl.volume = vol;         // fallback: element volume (desktop)
+    else if (arenaEl) arenaEl.volume = vol;         // fallback: element volume (desktop only)
   }
-  async function startAudio() {
-    if (audioReady || starting) return;
-    starting = true;
-    // Primary path — decode to buffer + GainNode (the only thing that fades correctly on iOS)
+
+  // Decode ahead of time (allowed without a gesture; only resume/start need the gesture).
+  (async function initAudio() {
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) throw new Error('no-webaudio');
+      if (!AC) return;
       audioCtx = new AC();
       gainNode = audioCtx.createGain();
       gainNode.gain.value = 0;
       gainNode.connect(audioCtx.destination);
-      if (audioCtx.state === 'suspended') await audioCtx.resume();
       const res = await fetch('audio/arena.mp3');
-      const buf = await audioCtx.decodeAudioData(await res.arrayBuffer());
-      const src = audioCtx.createBufferSource();
-      src.buffer = buf;
-      src.loop = true;
-      src.connect(gainNode);
-      src.start(0);
-      audioReady = true;
-      return;
+      arenaBuffer = await audioCtx.decodeAudioData(await res.arrayBuffer());
+      if (wantsStart) startAudio();   // user already interacted while we were decoding
     } catch (e) { audioCtx = null; gainNode = null; }
-    // Fallback path — plain <audio> element (at least gives sound on desktop)
-    try {
-      if (arenaEl) { arenaEl.volume = 0; await arenaEl.play(); audioReady = true; return; }
-    } catch (e) {}
-    starting = false;
+  })();
+
+  // Fully synchronous — safe to run inside the gesture handler on iOS.
+  function startAudio() {
+    if (audioReady) { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {}); return; }
+    // Web Audio buffer path
+    if (audioCtx && arenaBuffer && gainNode) {
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const src = audioCtx.createBufferSource();
+        src.buffer = arenaBuffer;
+        src.loop = true;
+        src.connect(gainNode);
+        src.start(0);
+        audioReady = true;
+        return;
+      } catch (e) {}
+    }
+    // buffer not decoded yet — remember to start as soon as it is
+    if (audioCtx && !arenaBuffer) { wantsStart = true; }
+    // last-ditch fallback if Web Audio is unavailable entirely
+    if (!audioCtx && arenaEl) {
+      arenaEl.volume = 0;
+      arenaEl.play().then(() => { audioReady = true; }).catch(() => {});
+    }
   }
-  // browsers require a gesture before sound — start on the first interaction (retry until it sticks)
-  ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev =>
+  ['pointerdown', 'touchstart', 'keydown', 'wheel', 'click'].forEach(ev =>
     window.addEventListener(ev, startAudio, { passive: true }));
   if (soundBtn) {
     requestAnimationFrame(() => soundBtn.classList.add('show'));
     soundBtn.addEventListener('click', () => {
       soundOn = !soundOn;
       soundBtn.classList.toggle('muted', !soundOn);
-      if (soundOn && !audioReady) startAudio();
-      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+      startAudio();
     });
   }
 
