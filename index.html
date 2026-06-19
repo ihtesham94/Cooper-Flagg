@@ -1682,9 +1682,9 @@
       if (arenaEl && !audioReady) { arenaEl.volume = 0; arenaEl.play().then(() => { audioReady = true; }).catch(() => {}); }
       return;
     }
-    // ALWAYS resume the engine inside the gesture — this is what unlocks audio on iOS,
-    // and it must happen whether or not the buffer has finished decoding yet.
-    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+    // ALWAYS resume the engine inside the gesture — this is what unlocks audio on iOS.
+    // Resume unconditionally so iOS's 'suspended' AND 'interrupted' states are both handled.
+    audioCtx.resume().catch(() => {});
     if (audioReady) return;
     if (arenaBuffer && gainNode) {
       try {
