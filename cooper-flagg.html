@@ -1677,26 +1677,26 @@
 
   // Fully synchronous — safe to run inside the gesture handler on iOS.
   function startAudio() {
-    if (audioReady) { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {}); return; }
-    // Web Audio buffer path
-    if (audioCtx && arenaBuffer && gainNode) {
+    // No Web Audio at all → element fallback (desktop only)
+    if (!audioCtx) {
+      if (arenaEl && !audioReady) { arenaEl.volume = 0; arenaEl.play().then(() => { audioReady = true; }).catch(() => {}); }
+      return;
+    }
+    // ALWAYS resume the engine inside the gesture — this is what unlocks audio on iOS,
+    // and it must happen whether or not the buffer has finished decoding yet.
+    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+    if (audioReady) return;
+    if (arenaBuffer && gainNode) {
       try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
         const src = audioCtx.createBufferSource();
         src.buffer = arenaBuffer;
         src.loop = true;
         src.connect(gainNode);
         src.start(0);
         audioReady = true;
-        return;
       } catch (e) {}
-    }
-    // buffer not decoded yet — remember to start as soon as it is
-    if (audioCtx && !arenaBuffer) { wantsStart = true; }
-    // last-ditch fallback if Web Audio is unavailable entirely
-    if (!audioCtx && arenaEl) {
-      arenaEl.volume = 0;
-      arenaEl.play().then(() => { audioReady = true; }).catch(() => {});
+    } else {
+      wantsStart = true;   // still decoding — initAudio() will start it the moment it's ready
     }
   }
   ['pointerdown', 'touchstart', 'keydown', 'wheel', 'click'].forEach(ev =>
@@ -1730,7 +1730,12 @@
   });
 
   // Refresh ScrollTrigger after all assets load to fix mis-calculated positions
+  // Always start at the very top on (re)load — otherwise Safari restores the previous scroll
+  // position, dropping you past the hero into the silent zone, and the audio never plays.
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
   window.addEventListener('load', () => {
+    window.scrollTo(0, 0);
     setTimeout(() => ScrollTrigger.refresh(), 300);
   });
 
