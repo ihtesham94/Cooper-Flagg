@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cooper Flagg</title>
 
+  <!-- Download the arena audio first, before the 94 hero frames saturate the network -->
+  <link rel="preload" as="fetch" href="audio/arena.mp3?v=2" fetchpriority="high">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
@@ -1639,7 +1642,7 @@
   const soundBtn  = document.getElementById('soundToggle');
   const heroEl    = document.getElementById('hero');
   const arenaEl   = document.getElementById('arenaAudio');   // last-ditch fallback
-  const MAX_VOL   = 0.18;
+  const MAX_VOL   = 0.32;
   let soundOn    = true;
   let audioReady = false;
   let wantsStart = false;
@@ -1669,7 +1672,7 @@
       gainNode = audioCtx.createGain();
       gainNode.gain.value = 0;
       gainNode.connect(audioCtx.destination);
-      const res = await fetch('audio/arena.mp3?v=2');
+      const res = await fetch('audio/arena.mp3?v=2', { priority: 'high' });
       arenaBuffer = await audioCtx.decodeAudioData(await res.arrayBuffer());
       if (wantsStart) startAudio();   // user already interacted while we were decoding
     } catch (e) { audioCtx = null; gainNode = null; }
