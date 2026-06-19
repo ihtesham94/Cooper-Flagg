@@ -81,6 +81,8 @@
   }
   ['pointerdown','touchstart','keydown','wheel','click','scroll'].forEach(ev =>
     window.addEventListener(ev, startAudio, { passive: true }));
+  // free the audio engine on exit so iOS doesn't leak it and kill audio after a refresh
+  window.addEventListener('pagehide', e => { if (!e.persisted && audioCtx) { try { audioCtx.close(); } catch (_) {} } });
 
   function loop() {
     const total = document.documentElement.scrollHeight - window.innerHeight;
