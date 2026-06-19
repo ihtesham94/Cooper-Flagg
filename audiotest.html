@@ -57,7 +57,7 @@
       gainNode = audioCtx.createGain();
       gainNode.gain.value = 0;
       gainNode.connect(audioCtx.destination);
-      const res = await fetch('audio/arena.mp3');
+      const res = await fetch('audio/arena.mp3?v=2');
       if (!res.ok) { setErr('fetch HTTP ' + res.status); return; }
       buffer = await audioCtx.decodeAudioData(await res.arrayBuffer());
       if (wantsStart) startAudio();
