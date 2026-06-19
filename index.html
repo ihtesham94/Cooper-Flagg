@@ -51,6 +51,28 @@
       --fm:     'BrauMono', 'DM Mono', monospace;                     /* subheadings */
     }
 
+    /* ── Desktop ENTER gate ── */
+    #enterGate {
+      position: fixed; inset: 0; z-index: 300;
+      background: var(--darker);
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .7s ease, visibility .7s ease;
+    }
+    #enterGate.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    #enterBtn {
+      font-family: var(--fm); font-weight: 400;
+      text-transform: uppercase; letter-spacing: .38em;
+      font-size: clamp(13px, 1.05vw, 16px);
+      color: var(--light); background: transparent;
+      border: 1px solid rgba(140, 184, 0, 0.5);
+      padding: 20px 44px 20px 54px;       /* extra left to optically centre the tracked caps */
+      border-radius: 44px; cursor: pointer;
+      transition: background .35s ease, color .35s ease, border-color .35s ease;
+    }
+    #enterBtn:hover { background: var(--lime); color: var(--darker); border-color: var(--lime); }
+    /* Touch devices start audio on the first tap — no gate needed */
+    @media (hover: none) and (pointer: coarse) { #enterGate { display: none !important; } }
+
     html { scroll-behavior: auto; }   /* no overflow here — it breaks position:sticky */
 
     body {
@@ -1122,6 +1144,11 @@
 </head>
 <body>
 
+<!-- Desktop entry gate — guarantees the click that browsers require to start audio -->
+<div id="enterGate">
+  <button id="enterBtn" type="button">ENTER</button>
+</div>
+
 <div id="cur"></div>
 
 <!-- ── NAV PILL (full-width, hero only) ────── -->
@@ -1740,6 +1767,29 @@
       soundBtn.classList.toggle('muted', !soundOn);
       startAudio();
     });
+  }
+
+  // ── DESKTOP ENTER GATE ──
+  // Mobile starts audio on the first touch, so the gate is only for desktop, where browsers
+  // require a real click before audio can play. Clicking ENTER is that click.
+  const enterGate = document.getElementById('enterGate');
+  const enterBtn  = document.getElementById('enterBtn');
+  if (enterGate) {
+    if (isMobile) {
+      enterGate.remove();
+    } else {
+      if (lenis && lenis.stop) lenis.stop();      // hold the page at the top until they enter
+      document.body.style.overflow = 'hidden';
+      const enterSite = () => {
+        startAudio();                              // valid click gesture → unlocks + plays audio
+        enterGate.classList.add('hidden');
+        document.body.style.overflow = '';
+        window.scrollTo(0, 0);
+        if (lenis && lenis.start) lenis.start();
+        setTimeout(() => { if (enterGate.parentNode) enterGate.remove(); }, 800);
+      };
+      enterBtn.addEventListener('click', enterSite);
+    }
   }
 
   (function scrubLoop() {
