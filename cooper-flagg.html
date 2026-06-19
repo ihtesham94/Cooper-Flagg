@@ -1145,9 +1145,6 @@
   </a>
 </div>
 
-<!-- TEMP audio debug readout — remove after diagnosing -->
-<div id="audioDbg" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#000;color:#8cff00;font:13px/1.5 -apple-system,system-ui,sans-serif;padding:8px 12px;font-variant-numeric:tabular-nums;border-bottom:2px solid #8cff00;">audio: booting…</div>
-
 <!-- ── ARENA AMBIENCE (plays under the hero, fades out as it ends) ── -->
 <audio id="arenaAudio" src="audio/arena.mp3?v=2" loop preload="auto"></audio>
 <button id="soundToggle" class="sound-toggle" aria-label="Toggle sound" title="Sound">
@@ -1648,20 +1645,6 @@
   let wantsStart = false;
   let audioCtx = null, gainNode = null, arenaBuffer = null;
   let iosUnlocked = false;
-  let dbgErr = '', dbgStage = 'start';
-  const dbgEl = document.getElementById('audioDbg');
-  function updateAudioDbg() {
-    if (!dbgEl) return;
-    const total = heroEl.offsetHeight - window.innerHeight;
-    const p = total > 0 ? Math.min(1, Math.max(0, -heroEl.getBoundingClientRect().top / total)) : 0;
-    const g = gainNode ? gainNode.gain.value : (arenaEl ? arenaEl.volume : 0);
-    dbgEl.textContent = 'state:' + (audioCtx ? audioCtx.state : 'NO-CTX') +
-      ' ready:' + (audioReady ? 'YES' : 'no') +
-      ' unlk:' + (iosUnlocked ? 'YES' : 'no') +
-      ' buf:' + (arenaBuffer ? 'YES' : 'no') +
-      ' p:' + p.toFixed(2) + ' gain:' + g.toFixed(3) +
-      ' [' + dbgStage + ']' + (dbgErr ? ' ERR:' + dbgErr : '');
-  }
 
   // Volume recomputed from the LIVE hero scroll position every frame (in the scrub loop below):
   // full early, smooth fade, fully silent by ~70% of the hero — and silent everywhere after it.
@@ -1682,20 +1665,16 @@
   (async function initAudio() {
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) { dbgErr = 'no-AudioContext'; return; }
-      dbgStage = 'ctx';
+      if (!AC) return;
       audioCtx = new AC();
       gainNode = audioCtx.createGain();
       gainNode.gain.value = 0;
       gainNode.connect(audioCtx.destination);
-      dbgStage = 'fetch';
       const res = await fetch('audio/arena.mp3?v=2', { priority: 'high' });
-      if (!res.ok) { dbgErr = 'fetch-' + res.status; return; }
-      dbgStage = 'decode';
+      if (!res.ok) return;
       arenaBuffer = await audioCtx.decodeAudioData(await res.arrayBuffer());
-      dbgStage = 'decoded';
       if (wantsStart) startAudio();   // user already interacted while we were decoding
-    } catch (e) { dbgErr = (dbgStage + ':' + (e && e.message ? e.message : e)).slice(0, 80); }
+    } catch (e) { audioCtx = null; gainNode = null; }
   })();
 
   // Fully synchronous — safe to run inside the gesture handler on iOS.
@@ -1751,7 +1730,6 @@
     currentFrame += (targetFrame - currentFrame) * LERP;
     drawFrameIndex(Math.round(currentFrame));
     updateArenaVolume();
-    updateAudioDbg();
     requestAnimationFrame(scrubLoop);
   })();
 
