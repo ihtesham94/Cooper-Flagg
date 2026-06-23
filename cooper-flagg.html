@@ -2411,6 +2411,14 @@
       if (!d || !d.ok) return;
       const put = (i, v) => { if (typeof v === 'number' && !isNaN(v)) BEATS[i].value = v; };
       put(1, d.ppg); put(2, d.rpg); put(3, d.apg); put(4, d.games);
+      // Season-aware eyebrows: "Rookie Season Average" while he's a rookie, then "2026-27 …" etc.
+      if (typeof d.season === 'number') {
+        const yr = d.season;
+        const span = yr + '-' + String((yr + 1) % 100).padStart(2, '0');   // 2026 -> "2026-27"
+        const avgLabel = yr <= 2025 ? 'Rookie Season Average' : span + ' Season Average';
+        BEATS[1].eyebrow = BEATS[2].eyebrow = BEATS[3].eyebrow = avgLabel;
+        BEATS[4].eyebrow = span + ' Regular Season';
+      }
       if (lastIdx >= 0) setStatic(BEATS[lastIdx], lastIdx);   // refresh if already on screen
     }).catch(() => {});
 
