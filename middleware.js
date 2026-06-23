@@ -10,7 +10,7 @@ export const config = {
 };
 
 const USER = 'cooper';
-const PASSWORD = 'dirigo2026';   // <-- change this to whatever you want
+const PASSWORD = 'hello12';   // <-- change this to whatever you want
 
 export default function middleware(request) {
   const auth = request.headers.get('authorization');
