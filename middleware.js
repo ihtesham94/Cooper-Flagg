@@ -5,8 +5,8 @@
 // To change the password: edit USER / PASSWORD here, commit, and push.
 
 export const config = {
-  // Protect everything except Vercel's internal paths.
-  matcher: '/((?!_vercel/).*)',
+  // Protect everything except Vercel internals and the public stats API endpoint.
+  matcher: '/((?!_vercel/|api/).*)',
 };
 
 const USER = 'cooper';

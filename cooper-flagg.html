@@ -2405,6 +2405,15 @@
     const fmt = (v,dec) => dec ? v.toFixed(dec) : String(Math.round(v));
     let lastIdx = -1;
 
+    // Live stats: pull Cooper's current season averages and update the reel.
+    // Falls back silently to the values above if the API is unavailable.
+    fetch('/api/stats').then(r => r.ok ? r.json() : null).then(d => {
+      if (!d || !d.ok) return;
+      const put = (i, v) => { if (typeof v === 'number' && !isNaN(v)) BEATS[i].value = v; };
+      put(1, d.ppg); put(2, d.rpg); put(3, d.apg); put(4, d.games);
+      if (lastIdx >= 0) setStatic(BEATS[lastIdx], lastIdx);   // refresh if already on screen
+    }).catch(() => {});
+
     function setStatic(b, idx){
       eyeEl.textContent = b.eyebrow;
       labEl.textContent = b.label;
