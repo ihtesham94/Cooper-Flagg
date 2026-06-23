@@ -32,7 +32,7 @@ export default function middleware(request) {
   return new Response('Authentication required.', {
     status: 401,
     headers: {
-      'WWW-Authenticate': 'Basic realm="Cooper Flagg — Private", charset="UTF-8"',
+      'WWW-Authenticate': 'Basic realm="Cooper Flagg"',
     },
   });
 }
