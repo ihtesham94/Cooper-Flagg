@@ -823,7 +823,7 @@
     .bl-pine  { -webkit-mask-image:url('Brand/fit/pine-tree.svg');  mask-image:url('Brand/fit/pine-tree.svg'); }
 
     /* Footer signature strip — four symbols set to EQUAL optical height (widths follow each shape) */
-    .footer-sig { --sig-h:46px; display:flex; align-items:center; justify-content:space-between;
+    .footer-sig { --sig-h:46px; display:flex; align-items:center; justify-content:center; gap:120px;
       padding:50px 0 52px; margin:10px 0 14px; border-top:0.5px solid var(--line); }
     .footer-sig .bl-mark { height:var(--sig-h); color:rgba(244,244,239,0.55);
       transition:color .3s ease, transform .4s cubic-bezier(.16,1,.3,1); }
@@ -832,7 +832,7 @@
     .footer-sig .bl-moose { height:calc(var(--sig-h) * 1.22); width:calc(var(--sig-h) * 1.22 * 0.791); }  /* taller so it doesn't read small */
     .footer-sig .bl-pine  { width:calc(var(--sig-h) * 0.949); }
     .footer-sig .bl-mark:hover { color:var(--lime); transform:translateY(-4px); }
-    @media (max-width:680px){ .footer-sig{ --sig-h:38px; padding:40px 0 42px; } }
+    @media (max-width:680px){ .footer-sig{ --sig-h:38px; justify-content:space-between; gap:0; padding:40px 0 42px; } }
 
     /* North Star watermark behind the statement — Dirigo made visual */
     .stmt-star { position:absolute; left:50%; top:50%; z-index:1; pointer-events:none;
