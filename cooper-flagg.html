@@ -453,9 +453,12 @@
     }
     /* Logo lives only in this segment, centred above the text */
     #nav-logo { display: none !important; }
-    .stmt-logo { display: block; height: 216px; width: auto; margin: 0 auto 24px;
-      opacity: 0; transform-origin: center; will-change: opacity, transform; }
-    @media (max-width: 768px) { .stmt-logo { height: 200px; margin-bottom: 32px; } }
+    .stmt-logo { display:block; height:168px; width:calc(168px * 1.098); margin:0 auto 28px;
+      opacity:0; transform-origin:center; will-change:opacity, transform;
+      background-color:var(--light);
+      -webkit-mask:url('Brand/fit/north-star.svg') center/contain no-repeat;
+      mask:url('Brand/fit/north-star.svg') center/contain no-repeat; }
+    @media (max-width: 768px) { .stmt-logo { height:130px; width:calc(130px * 1.098); margin-bottom:32px; } }
     .stmt-bg-text {
       position: absolute;
       font-family: var(--fd);
@@ -834,12 +837,6 @@
     .footer-sig .bl-mark:hover { color:var(--lime); transform:translateY(-4px); }
     @media (max-width:680px){ .footer-sig{ --sig-h:38px; justify-content:space-between; gap:0; padding:40px 0 42px; } }
 
-    /* North Star watermark behind the statement — Dirigo made visual */
-    .stmt-star { position:absolute; left:50%; top:50%; z-index:1; pointer-events:none;
-      width:min(82vh,900px); height:min(82vh,900px); transform:translate(-50%,-52%);
-      background-color:var(--lime); opacity:.05;
-      -webkit-mask:url('Brand/north-star.svg') center/contain no-repeat;
-      mask:url('Brand/north-star.svg') center/contain no-repeat; }
     .footer-bottom {
       display: flex; align-items: center; justify-content: space-between;
       padding-top: 40px;
@@ -1325,9 +1322,8 @@
 <!-- ── STATEMENT ──────────────────────────── -->
 <section id="statement">
   <div class="stmt-sticky">
-    <div class="stmt-star" aria-hidden="true"></div>
     <div class="stmt-content">
-      <img class="stmt-logo" src="Final CF logo white.svg" alt="Cooper Flagg">
+      <div class="stmt-logo" aria-hidden="true"></div>
       <div class="stmt-eyebrow">Beyond the Court</div>
       <p class="stmt-reveal" id="stmtReveal">Rookie of the Year was just the beginning of a larger story. Each step forward isn’t merely about the scoreboard; it’s about raising the level of the game itself, inspiring those who watch, and shaping a legacy that will resonate far beyond the court.</p>
     </div>
