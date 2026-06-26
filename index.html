@@ -811,6 +811,31 @@
       transition: color .2s;
     }
     .footer-col a:hover { color: var(--light); }
+
+    /* ── Brand visual-language marks — rendered as CSS masks so they recolor with `color` ── */
+    .bl-mark { display:inline-block; background-color:currentColor;
+      -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+      -webkit-mask-position:center; mask-position:center;
+      -webkit-mask-size:contain; mask-size:contain; }
+    .bl-anchor{ -webkit-mask-image:url('Brand/anchor.svg');     mask-image:url('Brand/anchor.svg'); }
+    .bl-star  { -webkit-mask-image:url('Brand/north-star.svg'); mask-image:url('Brand/north-star.svg'); }
+    .bl-moose { -webkit-mask-image:url('Brand/Moose.svg');      mask-image:url('Brand/Moose.svg'); }
+    .bl-pine  { -webkit-mask-image:url('Brand/pine-tree.svg');  mask-image:url('Brand/pine-tree.svg'); }
+
+    /* Footer signature strip — the four symbols as a quiet brand sign-off */
+    .footer-sig { display:flex; align-items:center; justify-content:center; gap:58px;
+      padding:30px 0 32px; margin:4px 0 30px; border-top:1px solid var(--line); }
+    .footer-sig .bl-mark { width:30px; height:30px; color:var(--muted);
+      transition:color .3s ease, transform .4s cubic-bezier(.16,1,.3,1); }
+    .footer-sig .bl-mark:hover { color:var(--lime); transform:translateY(-3px); }
+    @media (max-width:680px){ .footer-sig{ gap:40px; padding:26px 0 24px; } .footer-sig .bl-mark{ width:26px; height:26px; } }
+
+    /* North Star watermark behind the statement — Dirigo made visual */
+    .stmt-star { position:absolute; left:50%; top:50%; z-index:1; pointer-events:none;
+      width:min(82vh,900px); height:min(82vh,900px); transform:translate(-50%,-52%);
+      background-color:var(--lime); opacity:.05;
+      -webkit-mask:url('Brand/north-star.svg') center/contain no-repeat;
+      mask:url('Brand/north-star.svg') center/contain no-repeat; }
     .footer-bottom {
       display: flex; align-items: center; justify-content: space-between;
       padding-top: 40px;
@@ -1296,6 +1321,7 @@
 <!-- ── STATEMENT ──────────────────────────── -->
 <section id="statement">
   <div class="stmt-sticky">
+    <div class="stmt-star" aria-hidden="true"></div>
     <div class="stmt-content">
       <img class="stmt-logo" src="Final CF logo white.svg" alt="Cooper Flagg">
       <div class="stmt-eyebrow">Beyond the Court</div>
@@ -1472,6 +1498,12 @@
         <a href="mailto:enquiries@cooperflagg.com">Business Enquiries</a>
       </div>
     </div>
+  </div>
+  <div class="footer-sig">
+    <span class="bl-mark bl-anchor" title="Anchor" aria-hidden="true"></span>
+    <span class="bl-mark bl-star"   title="North Star" aria-hidden="true"></span>
+    <span class="bl-mark bl-moose"  title="Moose" aria-hidden="true"></span>
+    <span class="bl-mark bl-pine"   title="Pine Tree" aria-hidden="true"></span>
   </div>
   <div class="footer-bottom">
     <span class="footer-copy">© 2026 Cooper Flagg. All rights reserved.</span>
