@@ -1933,7 +1933,7 @@
         const le = clampN(-rect.top / (vh * 0.7), 0, 1);
         const eased = 1 - Math.pow(1 - le, 3);   // ease-out
         stmtLogo.style.opacity = eased.toFixed(3);
-        stmtLogo.style.transform = `scale(${(1.5 - 0.5 * eased).toFixed(3)})`;
+        stmtLogo.style.transform = `scale(${(0.7 + 0.3 * eased).toFixed(3)})`;
       }
       const total = stmtSec.offsetHeight - vh;
       const scrolled = clampN(-rect.top, 0, Math.max(1, total));
