@@ -2233,9 +2233,11 @@
           const r = stmtSecEl.getBoundingClientRect();
           capFade = cl(r.top / (window.innerHeight * 0.7), 0, 1);
         }
-        endcap.style.opacity = (capOp * capFade).toFixed(3);
-        if(hudEl) hudEl.style.opacity = (1 - capOp).toFixed(3);
-        progEl.style.opacity = (1 - capOp).toFixed(3);
+        // Sequential, never simultaneous: header (pine + title + dots) fully fades out over the
+        // first half, then "DIRIGO. I lead." fades in over the second half.
+        endcap.style.opacity = (cl((capOp - 0.5) * 2, 0, 1) * capFade).toFixed(3);
+        if(hudEl) hudEl.style.opacity = cl(1 - capOp * 2, 0, 1).toFixed(3);
+        progEl.style.opacity = cl(1 - capOp * 2, 0, 1).toFixed(3);
         for(const d of depthEls){
           const eff = d.z + currentZ;
           let o;
