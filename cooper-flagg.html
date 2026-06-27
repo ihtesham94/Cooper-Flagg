@@ -2099,7 +2099,7 @@
   (function(){
     const PH = 'cooper-base.png';
     const M = [
-      { img:'journey/01-newport.jpg', year:'2006', short:'Born in\nNewport, ME',
+      { img:'journey/01-newport.jpg', year:'2006', short:'Born in\nNewport, ME', pos:'center 62%',
         title:'Born of <em>basketball</em>', badge:'2006 · Newport, Maine',
         body:'Cooper Flagg was born December 21, 2006 in Newport, Maine, to Ralph and Kelly Flagg, both former Maine basketball players. His twin brother <strong>Ace</strong> became his first real rival in the backyard. Older brother Hunter went on to play at the University of Maine.',
         stats:[['~3,000','Town population'],['Dec 21','Birthday, 2006']] },
@@ -2336,7 +2336,7 @@
     function openJModal(i){
       const m = M[i];
       const stats = m.stats.map(s=>`<div class="j-modal-stat"><div class="n">${s[0]}</div><div class="l">${s[1]}</div></div>`).join('');
-      const gallery = m.gallery.map(g=>`<img src="${g}" alt="" onerror="this.onerror=null;this.src='${PH}'">`).join('');
+      const gallery = m.gallery.map(g=>`<img${m.pos ? ` style="object-position:${m.pos}"` : ''} src="${g}" alt="" onerror="this.onerror=null;this.src='${PH}'">`).join('');
       const gc = m.gallery.length < 2 ? 'j-modal-gallery single' : 'j-modal-gallery';
       jcard.innerHTML = `<button class="j-modal-close" id="jModalClose2" aria-label="Close">×</button>
         <span class="j-modal-badge">${m.badge}</span>
