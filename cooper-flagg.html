@@ -965,8 +965,8 @@
     .j-modal-body strong{ color:var(--light); font-weight:500; }
     .j-modal-gallery{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .j-modal-gallery.single{ grid-template-columns:1fr; }
-    .j-modal-gallery img{ width:100%; height:auto; aspect-ratio:16/10; object-fit:cover; object-position:center 30%; border-radius:12px; border:1px solid var(--line); display:block; }
-    .j-modal-gallery.single img{ aspect-ratio:16/10; }
+    .j-modal-gallery img{ width:100%; height:clamp(200px, 30vh, 340px); object-fit:cover; object-position:center 30%; border-radius:12px; border:1px solid var(--line); display:block; }
+    .j-modal-gallery.single img{ height:clamp(200px, 30vh, 340px); }
     .j-modal-stats{ display:flex; gap:32px; flex-wrap:wrap; margin:0 0 32px; }
     .j-modal-stat .n{ font-family:var(--fd); font-size:38px; color:var(--lime); line-height:1; }
     .j-modal-stat .l{ font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:4px; }
@@ -988,7 +988,7 @@
       /* images: full width (never bleed), fixed balanced 4:3 frame, no distortion */
       .j-modal-gallery{ grid-template-columns:1fr; gap:14px; margin-bottom:6px; }
       .j-modal-gallery img, .j-modal-gallery.single img{
-        width:100%; height:auto; aspect-ratio:16/10; object-fit:cover; object-position:center 30%;
+        width:100%; height:clamp(180px, 30vh, 300px); object-fit:cover; object-position:center 30%;
         margin:0; display:block; border-radius:12px; }
     }
 
