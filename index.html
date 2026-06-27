@@ -887,7 +887,7 @@
     @keyframes jfloat{ 0%{transform:translateY(20px);opacity:0;} 20%{opacity:.5;} 80%{opacity:.3;} 100%{transform:translateY(-120px);opacity:0;} }
 
     .j-hud{ position:absolute; z-index:30; left:0; right:0; top:0; pointer-events:none;
-      padding:84px 40px 0; display:flex; flex-direction:column; align-items:center; text-align:center; }
+      padding:128px 40px 0; display:flex; flex-direction:column; align-items:center; text-align:center; }
     .j-eyebrow{ font-family:var(--fm); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--lime); margin-bottom:14px; }
     .j-title{ font-family:var(--fd); font-size:clamp(28px,3.4vw,46px); line-height:.95; margin-top:0; }
     .j-title em{ font-style:normal; color:var(--lime); }
@@ -895,17 +895,17 @@
       -webkit-mask:url('Brand/fit/pine-tree.svg') center/contain no-repeat;
       mask:url('Brand/fit/pine-tree.svg') center/contain no-repeat; }
 
-    .j-prog{ position:absolute; left:40px; top:60%; transform:translateY(-50%); z-index:30; display:flex; flex-direction:column; gap:14px; pointer-events:none; }
+    .j-prog{ position:absolute; left:40px; top:64%; transform:translateY(-50%); z-index:30; display:flex; flex-direction:column; gap:14px; pointer-events:none; }
     .j-prog-dot{ width:7px; height:7px; border-radius:50%; border:1px solid rgba(140,184,0,.35); background:transparent; transition:background .3s, transform .3s; }
     .j-prog-dot.active{ background:var(--lime); transform:scale(1.4); box-shadow:0 0 12px rgba(140,184,0,.5); }
     @media(max-width:700px){ .j-prog{display:none;} .j-meta{display:none;} }
 
     .j-top-fade{ position:absolute; left:0; right:0; top:0; height:30vh; z-index:1; pointer-events:none;
       background:linear-gradient(to bottom, var(--dark) 0%, rgba(0,47,44,0.55) 45%, transparent 100%); }
-    #j-viewport{ position:absolute; inset:0; z-index:2; perspective:3000px; perspective-origin:50% 60%; overflow:hidden; }
+    #j-viewport{ position:absolute; inset:0; z-index:2; perspective:3000px; perspective-origin:50% 64%; overflow:hidden; }
     #j-hallway{ position:absolute; inset:0; transform-style:preserve-3d; will-change:transform; }
 
-    .frame{ position:absolute; top:60%; margin-top:-205px; width:290px; height:410px;
+    .frame{ position:absolute; top:64%; margin-top:-205px; width:290px; height:410px;
       border:1px solid var(--line); border-radius:4px; overflow:hidden; background:var(--darker);
       transform-style:preserve-3d; transition:filter .4s ease, box-shadow .4s ease; cursor:pointer;
       box-shadow:0 4px 60px rgba(0,0,0,0.9); }
@@ -920,7 +920,7 @@
       color:var(--lime); background:rgba(140,184,0,0.1); border:1px solid rgba(140,184,0,0.2); padding:4px 9px; border-radius:100px; margin-bottom:10px; }
     .frame-ttl{ font-family:var(--fd); font-size:24px; line-height:.98; letter-spacing:.02em; }
 
-    .frame-info{ position:absolute; top:60%; margin-top:-205px; transform-style:preserve-3d; pointer-events:none; hyphens:none; }
+    .frame-info{ position:absolute; top:64%; margin-top:-205px; transform-style:preserve-3d; pointer-events:none; hyphens:none; }
     .frame-info.left{ left:3%; right:75.5%; text-align:right; }
     .frame-info.right{ right:3%; left:75.5%; text-align:left; }
     .frame-info.left .fi-title, .frame-info.left .fi-body{ margin-left:auto; }
@@ -996,6 +996,10 @@
     .mt-pine{ display:block; height:74px; width:calc(74px * 0.949); margin:0 auto 18px; background-color:var(--light);
       -webkit-mask:url('Brand/fit/pine-tree.svg') center/contain no-repeat;
       mask:url('Brand/fit/pine-tree.svg') center/contain no-repeat; }
+    /* pine scales up into place (like the North Star) when it enters view */
+    .j-pine, .mt-pine{ opacity:0; transform:scale(0.7); transform-origin:center bottom;
+      transition:opacity .8s ease, transform .9s cubic-bezier(.16,1,.3,1); }
+    .j-pine.in, .mt-pine.in{ opacity:1; transform:scale(1); }
     .mt-spine{ position:absolute; left:26px; top:6px; bottom:6px; width:1.5px;
       background:rgba(140,184,0,0.16); border-radius:2px; overflow:hidden; z-index:0; }
     .mt-fill{ position:absolute; left:0; top:0; width:100%; height:0; background:linear-gradient(to bottom, var(--lime), rgba(140,184,0,0.4));
@@ -1905,6 +1909,14 @@
       end: '15% top',
       scrub: true
     }
+  });
+
+  // ── Pine marks scale up when they enter view (mirrors the North Star) ──
+  document.querySelectorAll('.j-pine, .mt-pine').forEach(el => {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.35 });
+    io.observe(el);
   });
 
   // ── STATEMENT SECTION ───────────────────────
