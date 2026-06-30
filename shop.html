@@ -86,6 +86,8 @@
       max-width:380px; text-wrap:pretty; }
     .meta-col a{ display:block; }
     .meta-col .meta-label + .meta-label{ margin-top:28px; }
+    .ship-cta{ margin-top:28px; }
+    .cta-short{ display:none; }
     .meta-col a.ini-cta{ display:inline-flex; align-items:center; gap:9px; width:fit-content; margin:18px 0 0 -20px;
       font-family:var(--fm); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
       background:transparent; color:var(--accent); border:1px solid rgba(0,47,44,0.4); padding:11px 19px; border-radius:100px;
@@ -93,8 +95,12 @@
     .meta-col a.ini-cta:hover{ background:var(--accent); color:var(--bg); border-color:var(--accent); transform:translateY(-2px); }
     .ini-cta .anchor-mask{ width:12px; height:13px; }
     @media (max-width:760px){
-      .meta-col a.ini-cta{ font-size:10px; padding:10px 16px; gap:8px; margin:16px 0 0 -17px; }
+      .ship-cta{ display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:22px; }
+      .ship-cta .meta-label{ margin-top:0; }
+      .meta-col a.ini-cta{ font-size:10px; padding:10px 15px; gap:8px; margin:0; flex:none; white-space:nowrap; }
       .ini-cta .anchor-mask{ width:10px; height:11px; }
+      .cta-full{ display:none; }
+      .cta-short{ display:inline; }
     }
     .meta-link{ position:relative; }
     .meta-link:hover{ opacity:.6; }
@@ -389,8 +395,10 @@
     </div>
     <div class="meta-col">
       <a class="meta-label meta-link" href="index.html">Visit Cooper Flagg →</a>
-      <a class="meta-label meta-link" href="#" id="shipInfoLink">Shipping & Returns</a>
-      <a class="ini-cta" href="#initiative"><span class="anchor-mask" aria-hidden="true"></span>Support the Anchor Initiative</a>
+      <div class="ship-cta">
+        <a class="meta-label meta-link" href="#" id="shipInfoLink">Shipping & Returns</a>
+        <a class="ini-cta" href="#initiative"><span class="anchor-mask" aria-hidden="true"></span><span class="cta-full">Support the Anchor Initiative</span><span class="cta-short">Support T.A.I</span></a>
+      </div>
     </div>
     <div class="meta-col"><div class="meta-label">© 2026</div></div>
   </div>
