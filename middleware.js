@@ -6,7 +6,7 @@
 
 export const config = {
   // Protect everything except Vercel internals and the public stats API endpoint.
-  matcher: '/((?!_vercel/|api/).*)',
+  matcher: '/((?!_vercel/|api/|favicon|apple-touch-icon).*)',
 };
 
 const USER = 'cooper';
