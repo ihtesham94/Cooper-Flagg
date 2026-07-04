@@ -1730,12 +1730,26 @@
     lastDrawn = -1;
     drawFrameIndex(Math.round(currentFrame));
   }
-  let lastVW = window.innerWidth;
-  window.addEventListener('resize', () => {
-    // on mobile, only re-size on a real width change (orientation) — ignore address-bar height changes
-    if (!isMobile || window.innerWidth !== lastVW) { lastVW = window.innerWidth; resizeCanvas(); }
-  });
+  // Keep the canvas backing store locked to the hero element's real on-screen box.
+  // In normal Safari, `100vh` is constant, so this never fires as the address bar
+  // hides/shows (no frame "pop"). But in-app browsers (Instagram / Facebook) resize
+  // the viewport AFTER load when their toolbars settle — this catches that change and
+  // re-renders so the frame can never be stretched/squashed to a stale aspect ratio.
+  let lastW = 0, lastH = 0, roPending = false;
+  function syncCanvas() {
+    roPending = false;
+    const w = Math.round(heroStage.clientWidth), h = Math.round(heroStage.clientHeight);
+    if (Math.abs(w - lastW) < 1 && Math.abs(h - lastH) < 1) return;
+    lastW = w; lastH = h;
+    resizeCanvas();
+  }
+  if (window.ResizeObserver) {
+    new ResizeObserver(() => { if (!roPending) { roPending = true; requestAnimationFrame(syncCanvas); } }).observe(heroStage);
+  } else {
+    window.addEventListener('resize', () => { if (!roPending) { roPending = true; requestAnimationFrame(syncCanvas); } });
+  }
   resizeCanvas();
+  lastW = Math.round(heroStage.clientWidth); lastH = Math.round(heroStage.clientHeight);
 
   function drawFrameIndex(i) {
     let idx = Math.max(0, Math.min(COUNT - 1, i));
