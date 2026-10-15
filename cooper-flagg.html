@@ -2044,8 +2044,10 @@
       const o = op.toFixed(3);
       if (c._o !== o){ c.style.opacity = o; c._o = o; }
       if (g > 0.02){
-        const a = (g * 0.9).toFixed(2);
-        c.style.textShadow = `0 0 7px ${GC}${a}),0 0 18px ${GC}${a}),0 0 34px ${GC}${a})`;
+        const a = Math.min(1, g).toFixed(2);
+        const a2 = (g * 0.75).toFixed(2);
+        c.style.textShadow =
+          `0 0 3px rgba(255,255,255,${a}),0 0 10px ${GC}${a}),0 0 22px ${GC}${a}),0 0 42px ${GC}${a}),0 0 72px ${GC}${a2})`;
         c._g = 1;
       } else if (c._g){ c.style.textShadow = 'none'; c._g = 0; }
     }
@@ -2075,11 +2077,13 @@
       const head = p * (n + 40) - 20;   // lead-in / lead-out so it finishes within the scrub
       for (let i = 0; i < n; i++){
         const d = head - i;
-        let op, g;
-        if (d <= 0)      { op = 0;   g = 0; }                       // not yet reached
-        else if (d < 1)  { op = d;   g = Math.sin(d * Math.PI); }   // igniting (glow peaks mid-reveal)
-        else if (d < 1.5){ op = 1 - (d - 1) / 0.5 * 0.08; g = 0; }  // easing to afterglow
-        else             { op = 0.92; g = 0; }                      // settled
+        let op;
+        if (d <= 0)       op = 0;                       // not yet reached
+        else if (d < 1)   op = d;                       // fading in
+        else if (d < 1.5) op = 1 - (d - 1) / 0.5 * 0.08;// easing to afterglow
+        else              op = 0.92;                    // settled
+        // Strong glow that ignites and lingers over a wider band before settling.
+        const g = (d > 0 && d < 2.2) ? Math.sin((d / 2.2) * Math.PI) : 0;
         setChar(gcs[i], op, g);
       }
     }
