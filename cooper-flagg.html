@@ -1460,10 +1460,14 @@
 <section id="numbers">
   <div class="num-saw" aria-hidden="true">
     <svg id="numSaw" viewBox="0 80 1917 1080" preserveAspectRatio="xMidYMin meet" xmlns="http://www.w3.org/2000/svg">
+      <g id="sawEdge">
       <path class="saw-edge" d="M1080.777 444.016 L1621.164 999.945 L1621.168 793.648 L1875.516 1080 L1917.125 1080 L1621.168 750.246 L1621.164 956.543 L1080.777 400.609 Z"/>
       <path class="saw-edge" d="M540.387 427.711 L0 115.715 L0 159.117 L540.387 471.113 L540.391 126.980 L1080.777 734.848 L1080.777 691.445 L540.391 83.578 Z"/>
+      </g>
+      <g id="sawFill">
       <path class="saw-fill" d="M540.387 471.113 L0 159.117 L0 1080 L1875.516 1080 L1621.164 793.648 L1621.164 999.945 L1080.777 444.016 L1080.777 734.848 L540.391 126.980 Z"/>
       <rect class="saw-fill" x="0" y="1079" width="1917" height="81"/>
+      </g>
     </svg>
   </div>
   <div class="num-stage">
@@ -2108,16 +2112,30 @@
     updateStmtReveal();
   }
 
-  // ── SAWTOOTH TRANSITION — subtle horizontal parallax drift of the teeth ──
+  // ── SAWTOOTH TRANSITION — fade in + two-panel entrance, then gentle parallax rise ──
   const numSaw = document.getElementById('numSaw');
   if (numSaw) {
     const sawWrap = numSaw.parentElement;
+    const sawFill = document.getElementById('sawFill');
+    const sawEdge = document.getElementById('sawEdge');
+    const c01 = v => Math.min(1, Math.max(0, v));
+    const easeOut = t => 1 - Math.pow(1 - t, 3);
     function driftSaw(){
       const vh = window.innerHeight;
       const r = sawWrap.getBoundingClientRect();
-      const prog = Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height)));
-      const y = -prog * 7.4;   // teeth rise gently as you scroll past (parallax)
-      numSaw.style.transform = `translateY(${y.toFixed(2)}%)`;
+      // Entrance: 0 as the divider's top enters the bottom of the screen → 1 by ~40% up.
+      const enter = c01((vh - r.top) / (vh * 0.6));
+      // Fade in over the first half of the entrance
+      numSaw.style.opacity = easeOut(c01(enter / 0.55)).toFixed(3);
+      // Panel 1 — green rises into place
+      const fillT = easeOut(c01(enter / 0.85));
+      // Panel 2 — lime edge follows a beat later, sliding out from behind the green
+      const edgeT = easeOut(c01((enter - 0.25) / 0.75));
+      if (sawFill) sawFill.setAttribute('transform', `translate(0 ${(150 * (1 - fillT)).toFixed(1)})`);
+      if (sawEdge) sawEdge.setAttribute('transform', `translate(0 ${(260 * (1 - edgeT)).toFixed(1)})`);
+      // Parallax: whole divider rises gently as it continues past
+      const prog = c01((vh - r.top) / (vh + r.height));
+      numSaw.style.transform = `translateY(${(-prog * 7.4).toFixed(2)}%)`;
     }
     window.addEventListener('scroll', driftSaw, { passive:true });
     window.addEventListener('resize', driftSaw);
