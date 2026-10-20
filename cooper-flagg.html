@@ -1116,7 +1116,7 @@
        SHOE SECTION — scroll-scrubbed Hesi Low v2 (bright product moment)
        ════════════════════════════════════════════════════════ */
     #shoe{ position:relative; height:380vh; background:var(--cream); }
-    .shoe-stage{ position:sticky; top:0; height:100vh; overflow:hidden; background:var(--cream); }
+    .shoe-stage{ position:sticky; top:0; height:100vh; overflow:hidden; background:var(--cream); z-index:1; }
     .shoe-bgword{ position:absolute; left:50%; top:46%; transform:translate(-50%,-50%);
       font-family:var(--fd); font-size:clamp(140px,26vw,440px); line-height:.8; letter-spacing:.01em;
       color:rgba(0,47,44,0.05); white-space:nowrap; pointer-events:none; text-transform:uppercase; z-index:1; }
@@ -1216,8 +1216,10 @@
     #numbers{ position:relative; height:520vh; background:var(--dark); }
     /* ── SAWTOOTH SECTION TRANSITION — the CF divider artwork (pine-serration steps + lime edge).
        Cream above (matches the shoe section), dark green below (flows into By the Numbers). */
-    .num-saw{ position:relative; z-index:6; width:100%; aspect-ratio:1920 / 1080;
-      background:var(--cream); overflow:hidden; }
+    /* Overlays the END of the shoe section (sits just above #numbers, takes no space of its own),
+       transparent so the teeth rise straight over the shoe scene and flow into the green — no gap. */
+    .num-saw{ position:absolute; left:0; right:0; bottom:calc(100% - 1px); z-index:6;
+      aspect-ratio:1920 / 1080; background:transparent; overflow:hidden; pointer-events:none; }
     .num-saw svg{ position:absolute; left:0; top:0; width:100%; height:auto; display:block; will-change:transform; }
     .num-saw .saw-lottie{ position:absolute; inset:0; }
     .num-saw .saw-lottie svg{ display:block; }
