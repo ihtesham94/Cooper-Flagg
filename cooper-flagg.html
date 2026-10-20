@@ -33,6 +33,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie_light.min.js"></script>
 
   <style>
     /* ── BRAND FONTS (self-hosted) ───────────────────────────────
@@ -1215,9 +1216,11 @@
     #numbers{ position:relative; height:520vh; background:var(--dark); }
     /* ── SAWTOOTH SECTION TRANSITION — the CF divider artwork (pine-serration steps + lime edge).
        Cream above (matches the shoe section), dark green below (flows into By the Numbers). */
-    .num-saw{ position:relative; z-index:6; width:100%; aspect-ratio:1917 / 1000;
+    .num-saw{ position:relative; z-index:6; width:100%; aspect-ratio:1920 / 1080;
       background:var(--cream); overflow:hidden; }
     .num-saw svg{ position:absolute; left:0; top:0; width:100%; height:auto; display:block; will-change:transform; }
+    .num-saw .saw-lottie{ position:absolute; inset:0; }
+    .num-saw .saw-lottie svg{ display:block; }
     .num-saw .saw-fill{ fill:var(--dark); }
     .num-saw .saw-edge{ fill:var(--lime); }
     .num-stage{ position:sticky; top:0; height:100vh; overflow:hidden;
@@ -1459,6 +1462,7 @@
 <!-- ── BY THE NUMBERS (kinetic stat reel) ─── -->
 <section id="numbers">
   <div class="num-saw" aria-hidden="true">
+    <div class="saw-lottie" id="numSawLottie"></div>
     <svg id="numSaw" viewBox="0 80 1917 1080" preserveAspectRatio="xMidYMin meet" xmlns="http://www.w3.org/2000/svg">
       <g id="sawEdge">
       <path class="saw-edge" d="M1080.777 444.016 L1621.164 999.945 L1621.168 793.648 L1875.516 1080 L1917.125 1080 L1621.168 750.246 L1621.164 956.543 L1080.777 400.609 Z"/>
@@ -2112,34 +2116,51 @@
     updateStmtReveal();
   }
 
-  // ── SAWTOOTH TRANSITION — fade in + two-panel entrance, then gentle parallax rise ──
+  // ── SAWTOOTH TRANSITION — After Effects (Lottie) divider, scrubbed by scroll ──
+  // Uses the AE animation (green panel rises, lime edge follows). Falls back to the
+  // coded SVG version if the Lottie player can't load.
+  const SAW_LOTTIE = {"nm":"cf website divider","ddd":0,"h":1080,"w":1920,"meta":{"g":"@lottiefiles/toolkit-js 0.76.0"},"layers":[{"ty":4,"nm":"Layer 2 Outlines","sr":1,"st":0,"op":128,"ip":0,"ln":"61","hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[936.833,460.666]},"s":{"a":0,"k":[100,100]},"p":{"a":1,"k":[{"o":{"x":0.482,"y":0},"i":{"x":0.303,"y":1},"s":[936.583,1636.584],"t":0},{"s":[936.583,619.584],"t":30}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","nm":"Group 1","it":[{"ty":"sh","nm":"Path 1","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],"o":[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],"v":[[-369.953,-116.282],[-910.341,-428.279],[-910.341,-428.093],[-936.583,-443.212],[-936.583,460.416],[-910.341,460.416],[-887.41,460.416],[936.583,460.416],[710.826,206.253],[710.825,412.549],[170.437,-143.381],[170.437,104.051],[170.437,147.454],[-369.951,-460.416]]}}},{"ty":"fl","nm":"Fill 1","c":{"a":0,"k":[0,0.1843137254901961,0.17254901960784313,1]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"p":{"a":0,"k":[936.833,460.666]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":1},{"ty":4,"nm":"Layer 3 Outlines","sr":1,"st":3,"op":131,"ip":3,"ln":"60","hasMask":false,"ao":0,"ks":{"a":{"a":0,"k":[955.772,496.76]},"s":{"a":0,"k":[100,100]},"p":{"a":1,"k":[{"o":{"x":0.477,"y":0},"i":{"x":0.315,"y":1},"s":[955.522,1600.49],"t":11},{"s":[955.522,583.49],"t":42}]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}},"shapes":[{"ty":"gr","nm":"Group 1","it":[{"ty":"sh","nm":"Path 1","d":1,"ks":{"a":0,"k":{"c":true,"i":[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],"o":[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],"v":[[-415.135,-131.542],[-955.523,-443.539],[-955.523,496.51],[955.523,496.51],[665.643,170.159],[665.642,376.454],[125.254,-179.476],[125.254,67.956],[125.254,111.36],[-415.134,-496.51]]}}},{"ty":"fl","nm":"Fill 1","c":{"a":0,"k":[0.5490196078431373,0.7215686274509804,0,1]},"r":1,"o":{"a":0,"k":100}},{"ty":"tr","a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"p":{"a":0,"k":[955.773,496.76]},"r":{"a":0,"k":0},"sa":{"a":0,"k":0},"o":{"a":0,"k":100}}]}],"ind":2}],"v":"5.7.0","fr":29.97,"op":48.33870967741935,"ip":0,"assets":[]};
   const numSaw = document.getElementById('numSaw');
   if (numSaw) {
     const sawWrap = numSaw.parentElement;
+    const sawLottieEl = document.getElementById('numSawLottie');
     const sawFill = document.getElementById('sawFill');
     const sawEdge = document.getElementById('sawEdge');
     const c01 = v => Math.min(1, Math.max(0, v));
     const easeOut = t => 1 - Math.pow(1 - t, 3);
+    let sawAnim = null;
+    if (window.lottie && sawLottieEl) {
+      try {
+        sawAnim = lottie.loadAnimation({
+          container: sawLottieEl, renderer: 'svg', loop: false, autoplay: false,
+          animationData: SAW_LOTTIE,
+          rendererSettings: { preserveAspectRatio: 'xMidYMax slice' }
+        });
+        numSaw.style.display = 'none';
+      } catch (e) { sawAnim = null; }
+    }
     function driftSaw(){
       const vh = window.innerHeight;
       const r = sawWrap.getBoundingClientRect();
-      // Entrance: 0 as the divider's top enters the bottom of the screen → 1 by ~40% up.
-      const enter = c01((vh - r.top) / (vh * 0.6));
-      // Fade in over the first half of the entrance
+      // 0 as the divider's top enters the bottom of the screen → 1 when ~90% of it is in view
+      const enter = c01((vh - r.top) / (Math.min(r.height, vh) * 0.9));
+      if (sawAnim) {
+        const last = Math.max(0, sawAnim.totalFrames - 1);
+        sawAnim.goToAndStop(enter * last, true);
+        sawLottieEl.style.opacity = easeOut(c01(enter / 0.35)).toFixed(3);   // soft fade in
+        return;
+      }
+      // Fallback: coded two-panel entrance
       numSaw.style.opacity = easeOut(c01(enter / 0.55)).toFixed(3);
-      // Panel 1 — green rises into place
       const fillT = easeOut(c01(enter / 0.85));
-      // Panel 2 — lime edge follows a beat later, sliding out from behind the green
       const edgeT = easeOut(c01((enter - 0.25) / 0.75));
       if (sawFill) sawFill.setAttribute('transform', `translate(0 ${(150 * (1 - fillT)).toFixed(1)})`);
       if (sawEdge) sawEdge.setAttribute('transform', `translate(0 ${(260 * (1 - edgeT)).toFixed(1)})`);
-      // Parallax: whole divider rises gently as it continues past
-      const prog = c01((vh - r.top) / (vh + r.height));
-      numSaw.style.transform = `translateY(${(-prog * 7.4).toFixed(2)}%)`;
     }
     window.addEventListener('scroll', driftSaw, { passive:true });
     window.addEventListener('resize', driftSaw);
     if (lenis && lenis.on) lenis.on('scroll', driftSaw);
+    if (sawAnim) sawAnim.addEventListener('DOMLoaded', driftSaw);
     driftSaw();
   }
 
