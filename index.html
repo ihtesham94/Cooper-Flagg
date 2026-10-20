@@ -1229,8 +1229,8 @@
         radial-gradient(125% 95% at 50% 38%, #023f3a 0%, var(--dark) 52%, var(--darker) 100%); }   /* top edge = exact divider green */
     .num-grid{ position:absolute; inset:0; opacity:.05; pointer-events:none;
       background-image:linear-gradient(var(--lime) 1px,transparent 1px),linear-gradient(90deg,var(--lime) 1px,transparent 1px);
-      background-size:62px 62px; mask-image:radial-gradient(70% 70% at 50% 50%,#000 30%,transparent 100%);
-      -webkit-mask-image:radial-gradient(70% 70% at 50% 50%,#000 30%,transparent 100%); }
+      background-size:62px 62px; mask-image:radial-gradient(130% 100% at 50% 0%,#000 45%,transparent 100%);
+      -webkit-mask-image:radial-gradient(130% 100% at 50% 0%,#000 45%,transparent 100%); }   /* solid at the top so it continues the divider grid */
     .num-ghost{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
       font-family:var(--fm); font-weight:700; color:#ffffff; opacity:.035; font-size:48vw; line-height:1;
       white-space:nowrap; pointer-events:none; user-select:none; z-index:1; }
@@ -2140,6 +2140,35 @@
         numSaw.style.display = 'none';
       } catch (e) { sawAnim = null; }
     }
+    // Grid on the green panel — same 62px lime grid as By the Numbers, locked to that
+    // section's grid so the lines run straight through the seam. Applied as an SVG pattern
+    // fill on the green shape, so it only ever appears on the green (never over the shoe).
+    const numStageEl = document.querySelector('#numbers .num-stage');
+    const SVGNS = 'http://www.w3.org/2000/svg';
+    let gridPat = null, greenPath = null;
+    function setupSawGrid(){
+      const svg = sawLottieEl.querySelector('svg'); if (!svg) return;
+      greenPath = [...svg.querySelectorAll('path')].find(p => /rgb\(0,\s*47,\s*44\)/.test(p.getAttribute('fill') || ''));
+      if (!greenPath) return;
+      let defs = svg.querySelector('defs'); if (!defs){ defs = document.createElementNS(SVGNS,'defs'); svg.prepend(defs); }
+      gridPat = document.createElementNS(SVGNS,'pattern');
+      gridPat.setAttribute('id','cfSawGrid'); gridPat.setAttribute('patternUnits','userSpaceOnUse');
+      gridPat.setAttribute('width','62'); gridPat.setAttribute('height','62');
+      gridPat.innerHTML = '<rect width="62" height="62" fill="rgb(0,47,44)"/>' +
+        '<path d="M0 0.5H62M0.5 0V62" stroke="#8CB800" stroke-opacity="0.05" stroke-width="1" fill="none"/>';
+      defs.appendChild(gridPat);
+    }
+    function syncSawGrid(){
+      if (!gridPat) setupSawGrid();
+      if (!gridPat || !greenPath || !numStageEl) return;
+      if (greenPath.getAttribute('fill') !== 'url(#cfSawGrid)') greenPath.setAttribute('fill','url(#cfSawGrid)');
+      const M = greenPath.getScreenCTM(); if (!M) return;
+      const o = numStageEl.getBoundingClientRect();
+      // pattern space = screen px, origin at the numbers section's top-left (where its grid starts)
+      const PT = DOMMatrix.fromMatrix(M).inverse().multiply(new DOMMatrix().translate(o.left, o.top));
+      gridPat.setAttribute('patternTransform', `matrix(${PT.a} ${PT.b} ${PT.c} ${PT.d} ${PT.e} ${PT.f})`);
+    }
+    if (sawAnim) sawAnim.addEventListener('DOMLoaded', () => { setupSawGrid(); driftSaw(); });
     function driftSaw(){
       const vh = window.innerHeight;
       const r = sawWrap.getBoundingClientRect();
@@ -2148,6 +2177,7 @@
       if (sawAnim) {
         const last = Math.max(0, sawAnim.totalFrames - 1);
         sawAnim.goToAndStop(enter * last, true);
+        syncSawGrid();
         return;
       }
       // Fallback: coded two-panel entrance
@@ -2159,7 +2189,6 @@
     window.addEventListener('scroll', driftSaw, { passive:true });
     window.addEventListener('resize', driftSaw);
     if (lenis && lenis.on) lenis.on('scroll', driftSaw);
-    if (sawAnim) sawAnim.addEventListener('DOMLoaded', driftSaw);
     driftSaw();
   }
 
