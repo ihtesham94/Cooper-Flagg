@@ -2210,10 +2210,10 @@
       const r = sawWrap.getBoundingClientRect();
       const mob = sawMQ.matches;
       // Desktop: 0 as the divider's top enters the bottom of the screen → 1 when ~90% of it is in view.
-      // Mobile: the portrait divider is nearly screen-height and its green sits in the lower half, so the
-      // animation starts once the divider's BOTTOM reaches the screen bottom and plays over the next
-      // ~55% of a screen — the green visibly rises into view, at a pace that reads smoothly on a phone.
-      sawTarget = mob ? c01((vh - r.bottom) / (vh * 0.55))
+      // Mobile: plays from 40% of the divider on screen until its bottom edge reaches the screen bottom.
+      // Finishing exactly there means the flat top of By the Numbers never shows while the spikes are
+      // still rising — the green sweeps up from below the screen and only then flows into the section.
+      sawTarget = mob ? c01((vh - 0.4 * r.height - r.top) / (0.6 * r.height))
                       : c01((vh - r.top) / (Math.min(r.height, vh) * 0.9));
       if (!sawRaf) sawRaf = requestAnimationFrame(sawTick);
     }
@@ -2231,13 +2231,15 @@
     function sawRender(enter){
       const mob = sawMQ.matches;
       // Mobile: fade the whole HESI scene out as the green rises, so nothing is ever half-covered
-      const fade = mob ? c01((enter - 0.05) / 0.5) : 0;
+      const fade = mob ? c01((enter - 0.15) / 0.85) : 0;   // gentle: spans the whole rise, gone as the green lands
       window.__sawShoeFade = fade;
       if (mob && shoeStageForSaw && Math.abs(fade - sawLastFade) > 0.002){
         shoeStageForSaw.style.opacity = (1 - fade).toFixed(3); sawLastFade = fade;
       }
       if (sawAnim) {
-        const fr = enter * sawEnd;
+        // Mobile skips the first frames (the panel is still below the frame there, so nothing visible happens)
+        const f0 = mob ? Math.min(15, sawEnd * 0.4) : 0;
+        const fr = f0 + enter * (sawEnd - f0);
         if (Math.abs(fr - sawLastFrame) > 0.01) { sawAnim.goToAndStop(fr, true); sawLastFrame = fr; }
         syncSawGrid();
         return;
