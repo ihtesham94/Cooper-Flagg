@@ -1231,7 +1231,7 @@
         radial-gradient(125% 95% at 50% 38%, #023f3a 0%, var(--dark) 52%, var(--darker) 100%); }   /* top edge = exact divider green */
     .num-grid{ position:absolute; inset:0; opacity:.05; pointer-events:none;
       background-image:linear-gradient(var(--lime) 1px,transparent 1px),linear-gradient(90deg,var(--lime) 1px,transparent 1px);
-      background-size:62px 62px; mask-image:radial-gradient(130% 100% at 50% 0%,#000 45%,transparent 100%);
+      background-size:62px 62px; background-position:0 31px; mask-image:radial-gradient(130% 100% at 50% 0%,#000 45%,transparent 100%);
       -webkit-mask-image:radial-gradient(130% 100% at 50% 0%,#000 45%,transparent 100%); }   /* solid at the top so it continues the divider grid */
     .num-ghost{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
       font-family:var(--fm); font-weight:700; color:#ffffff; opacity:.035; font-size:48vw; line-height:1;
@@ -2167,7 +2167,7 @@
       const M = greenPath.getScreenCTM(); if (!M) return;
       const o = numStageEl.getBoundingClientRect();
       // pattern space = screen px, origin at the numbers section's top-left (where its grid starts)
-      const PT = DOMMatrix.fromMatrix(M).inverse().multiply(new DOMMatrix().translate(o.left, o.top));
+      const PT = DOMMatrix.fromMatrix(M).inverse().multiply(new DOMMatrix().translate(o.left, o.top + 31));
       gridPat.setAttribute('patternTransform', `matrix(${PT.a} ${PT.b} ${PT.c} ${PT.d} ${PT.e} ${PT.f})`);
     }
     if (sawAnim) sawAnim.addEventListener('DOMLoaded', () => { setupSawGrid(); driftSaw(); });
