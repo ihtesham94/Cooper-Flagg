@@ -1222,6 +1222,7 @@
       aspect-ratio:1920 / 1080; background:transparent; overflow:hidden; pointer-events:none; }
     .num-saw svg{ position:absolute; left:0; top:0; width:100%; height:auto; display:block; will-change:transform; }
     .num-saw .saw-lottie{ position:absolute; inset:0; }
+    .num-saw{ contain:paint; transform:translateZ(0); }   /* own GPU layer: redraws stay inside the divider */
     /* scale up slightly from the bottom-left so the last diagonal exits through the right edge
        (instead of landing on the bottom just short of the corner) — clean join with the green */
     .num-saw .saw-lottie, .num-saw > svg{ transform:scale(1.06); transform-origin:0% 100%; }
@@ -2156,7 +2157,7 @@
       if (!window.lottie || !sawLottieEl || mob === sawIsMob) return;
       sawIsMob = mob;
       if (sawAnim) { sawAnim.destroy(); sawAnim = null; }
-      gridPat = null; greenPath = null;
+      gridPat = null; greenPath = null; syncSawGrid._k = null;
       const data = mob ? SAW_LOTTIE_MOB : SAW_LOTTIE;
       try {
         sawAnim = lottie.loadAnimation({
@@ -2167,7 +2168,7 @@
         sawEnd = lastKey(data);
         numSaw.style.display = 'none';
         sawWrap.classList.remove('no-lottie');
-        sawAnim.addEventListener('DOMLoaded', driftSaw);
+        sawAnim.addEventListener('DOMLoaded', () => { sawLastFrame = -1; sawCur = -1; driftSaw(); });
       } catch (e) { sawAnim = null; }
     }
     // Grid on the green panel — same 62px lime grid as By the Numbers, locked to that
@@ -2192,25 +2193,52 @@
       if (greenPath.getAttribute('fill') !== 'url(#cfSawGrid)') greenPath.setAttribute('fill','url(#cfSawGrid)');
       const M = greenPath.getScreenCTM(); if (!M) return;
       const o = numStageEl.getBoundingClientRect();
+      const key = M.a+','+M.d+','+(M.e - o.left).toFixed(2)+','+(M.f - o.top).toFixed(2);
+      if (key === syncSawGrid._k) return; syncSawGrid._k = key;
       // pattern space = screen px, origin half a cell below the numbers section's top (no line on the seam)
       const PT = DOMMatrix.fromMatrix(M).inverse().multiply(new DOMMatrix().translate(o.left, o.top + 31));
       gridPat.setAttribute('patternTransform', `matrix(${PT.a} ${PT.b} ${PT.c} ${PT.d} ${PT.e} ${PT.f})`);
     }
+    // Stable viewport height — iOS Safari changes innerHeight as its toolbar collapses/expands,
+    // which made the scrub jump. Only refresh it on a real width change (rotation / resize).
+    let sawVH = window.innerHeight, sawVW = window.innerWidth;
+    function sawMeasureVH(){ if (window.innerWidth !== sawVW || !sawVH){ sawVW = window.innerWidth; sawVH = window.innerHeight; } }
+    let sawTarget = 0, sawCur = -1, sawRaf = 0;
+    // Scroll handler only READS layout and sets a target; all drawing happens in rAF.
     function driftSaw(){
-      const vh = window.innerHeight;
+      const vh = sawVH;
       const r = sawWrap.getBoundingClientRect();
       const mob = sawMQ.matches;
       // Desktop: 0 as the divider's top enters the bottom of the screen → 1 when ~90% of it is in view.
       // Mobile: the portrait divider is nearly screen-height and its green sits in the lower half, so the
       // animation starts once the divider's BOTTOM reaches the screen bottom and plays over the next
-      // ~38% of a screen — the green visibly rises into view instead of finishing below the fold.
-      const enter = mob ? c01((vh - r.bottom) / (vh * 0.38))
-                        : c01((vh - r.top) / (Math.min(r.height, vh) * 0.9));
+      // ~55% of a screen — the green visibly rises into view, at a pace that reads smoothly on a phone.
+      sawTarget = mob ? c01((vh - r.bottom) / (vh * 0.55))
+                      : c01((vh - r.top) / (Math.min(r.height, vh) * 0.9));
+      if (!sawRaf) sawRaf = requestAnimationFrame(sawTick);
+    }
+    // Ease toward the scroll target every display frame, so uneven iOS momentum-scroll events
+    // still produce fluid motion. Stops itself once settled.
+    function sawTick(){
+      sawRaf = 0;
+      if (sawCur < 0) sawCur = sawTarget;
+      const d = sawTarget - sawCur;
+      sawCur = Math.abs(d) < 0.0008 ? sawTarget : sawCur + d * 0.2;
+      sawRender(sawCur);
+      if (sawCur !== sawTarget) sawRaf = requestAnimationFrame(sawTick);
+    }
+    let sawLastFrame = -1, sawLastFade = -1;
+    function sawRender(enter){
+      const mob = sawMQ.matches;
       // Mobile: fade the whole HESI scene out as the green rises, so nothing is ever half-covered
-      window.__sawShoeFade = mob ? c01((enter - 0.05) / 0.5) : 0;
-      if (mob && shoeStageForSaw) shoeStageForSaw.style.opacity = (1 - window.__sawShoeFade).toFixed(3);
+      const fade = mob ? c01((enter - 0.05) / 0.5) : 0;
+      window.__sawShoeFade = fade;
+      if (mob && shoeStageForSaw && Math.abs(fade - sawLastFade) > 0.002){
+        shoeStageForSaw.style.opacity = (1 - fade).toFixed(3); sawLastFade = fade;
+      }
       if (sawAnim) {
-        sawAnim.goToAndStop(enter * sawEnd, true);
+        const fr = enter * sawEnd;
+        if (Math.abs(fr - sawLastFrame) > 0.01) { sawAnim.goToAndStop(fr, true); sawLastFrame = fr; }
         syncSawGrid();
         return;
       }
@@ -2223,7 +2251,7 @@
     }
     loadSaw();
     window.addEventListener('scroll', driftSaw, { passive:true });
-    window.addEventListener('resize', () => { loadSaw(); driftSaw(); });
+    window.addEventListener('resize', () => { sawMeasureVH(); loadSaw(); sawLastFrame = -1; driftSaw(); });
     if (lenis && lenis.on) lenis.on('scroll', driftSaw);
     driftSaw();
   }
