@@ -555,7 +555,7 @@
       .stmt-reveal .gc { opacity: 0.92 !important; }
     }
     @media (max-width: 768px) {
-      #statement { margin-top: -100vh; position: relative; z-index: 1; }   /* sits directly behind DIRIGO; revealed as it fades */
+      #statement { margin-top: -100vh; position: relative; z-index: 1; height: 230vh; }   /* more scroll = readable reveal */   /* sits directly behind DIRIGO; revealed as it fades */
       .stmt-sticky { padding: 54px 24px; }
       .stmt-eyebrow { margin-bottom: 38px; }   /* more breathing above the text */
       /* mobile: let the copy flow and wrap naturally, balanced, with generous leading */
@@ -2106,8 +2106,34 @@
 
     // Scroll-scrubbed reveal: a "head" sweeps through the characters in reading order as the
     // section scrolls past. Each glyph ignites (fades in + glow) then settles to a soft afterglow.
+    // Stable viewport height (iOS Safari changes innerHeight as its toolbar collapses — that jolted the reveal)
+    let stmtVH = window.innerHeight, stmtVW = window.innerWidth;
+    window.addEventListener('resize', () => { if (window.innerWidth !== stmtVW) { stmtVW = window.innerWidth; stmtVH = window.innerHeight; } });
+    let headTarget = -20, headCur = null, headRaf = 0;
+    function renderHead(head){
+      for (let i = 0; i < n; i++){
+        const d = head - i;
+        let op;
+        if (d <= 0)       op = 0;                       // not yet reached
+        else if (d < 1)   op = d;                       // fading in
+        else if (d < 1.5) op = 1 - (d - 1) / 0.5 * 0.08;// easing to afterglow
+        else              op = 0.92;                    // settled
+        // Strong glow that ignites and lingers over a wider band before settling.
+        const g = (d > 0 && d < 2.2) ? Math.sin((d / 2.2) * Math.PI) : 0;
+        setChar(gcs[i], op, g);
+      }
+    }
+    // Ease the head toward the scroll target each display frame (fluid under iOS momentum scrolling)
+    function headTick(){
+      headRaf = 0;
+      if (headCur === null) headCur = headTarget;
+      const dlt = headTarget - headCur;
+      headCur = Math.abs(dlt) < 0.05 ? headTarget : headCur + dlt * 0.18;
+      renderHead(headCur);
+      if (headCur !== headTarget) headRaf = requestAnimationFrame(headTick);
+    }
     function updateStmtReveal(){
-      const vh = window.innerHeight;
+      const vh = stmtVH;
       const rect = stmtSec.getBoundingClientRect();
       // Mobile: hold DIRIGO → fade its TEXT out on the solid panel → fade the PANEL to
       // reveal the statement behind it. No text ever overlaps.
@@ -2125,19 +2151,12 @@
       }
       const total = stmtSec.offsetHeight - vh;
       const scrolled = clampN(-rect.top, 0, Math.max(1, total));
-      const p = total > 0 ? scrolled / total : 0;
-      const head = p * (n + 40) - 20;   // lead-in / lead-out so it finishes within the scrub
-      for (let i = 0; i < n; i++){
-        const d = head - i;
-        let op;
-        if (d <= 0)       op = 0;                       // not yet reached
-        else if (d < 1)   op = d;                       // fading in
-        else if (d < 1.5) op = 1 - (d - 1) / 0.5 * 0.08;// easing to afterglow
-        else              op = 0.92;                    // settled
-        // Strong glow that ignites and lingers over a wider band before settling.
-        const g = (d > 0 && d < 2.2) ? Math.sin((d / 2.2) * Math.PI) : 0;
-        setChar(gcs[i], op, g);
-      }
+      // Mobile: the section is taller (more scroll) and the sweep completes at 80%, leaving a short
+      // hold on the full paragraph before it moves on. Desktop unchanged.
+      const span = isMobile ? total * 0.8 : total;
+      const p = span > 0 ? clampN(scrolled / span, 0, 1) : 0;
+      headTarget = p * (n + 40) - 20;   // lead-in / lead-out so it finishes within the scrub
+      if (!headRaf) headRaf = requestAnimationFrame(headTick);
     }
     window.addEventListener('scroll', updateStmtReveal, { passive:true });
     window.addEventListener('resize', updateStmtReveal);
