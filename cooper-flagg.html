@@ -1222,6 +1222,9 @@
       aspect-ratio:1920 / 1080; background:transparent; overflow:hidden; pointer-events:none; }
     .num-saw svg{ position:absolute; left:0; top:0; width:100%; height:auto; display:block; will-change:transform; }
     .num-saw .saw-lottie{ position:absolute; inset:0; }
+    /* scale up slightly from the bottom-left so the last diagonal exits through the right edge
+       (instead of landing on the bottom just short of the corner) — clean join with the green */
+    .num-saw .saw-lottie, .num-saw > svg{ transform:scale(1.06); transform-origin:0% 100%; }
     .num-saw .saw-lottie svg{ display:block; }
     .num-saw .saw-fill{ fill:var(--dark); }
     .num-saw .saw-edge{ fill:var(--lime); }
