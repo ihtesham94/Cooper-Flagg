@@ -2231,9 +2231,10 @@
     function sawRender(enter){
       const mob = sawMQ.matches;
       // Mobile: fade the whole HESI scene out as the green rises, so nothing is ever half-covered
-      const fade = mob ? c01((enter - 0.15) / 0.85) : 0;   // gentle: spans the whole rise, gone as the green lands
+      // Mobile: gentle, spans the whole rise. Desktop: fades over the last 20% so HESI is gone as the divider lands.
+      const fade = mob ? c01((enter - 0.15) / 0.85) : c01((enter - 0.8) / 0.2);
       window.__sawShoeFade = fade;
-      if (mob && shoeStageForSaw && Math.abs(fade - sawLastFade) > 0.002){
+      if (shoeStageForSaw && Math.abs(fade - sawLastFade) > 0.002){
         shoeStageForSaw.style.opacity = (1 - fade).toFixed(3); sawLastFade = fade;
       }
       if (sawAnim) {
