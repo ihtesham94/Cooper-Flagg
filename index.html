@@ -1223,7 +1223,8 @@
     .num-saw .saw-edge{ fill:var(--lime); }
     .num-stage{ position:sticky; top:0; height:100vh; overflow:hidden;
       display:flex; align-items:center; justify-content:center;
-      background:radial-gradient(125% 95% at 50% 38%, #023f3a 0%, var(--dark) 52%, var(--darker) 100%); }
+      background:linear-gradient(to bottom, var(--dark) 0%, rgba(0,47,44,0) 26%),
+        radial-gradient(125% 95% at 50% 38%, #023f3a 0%, var(--dark) 52%, var(--darker) 100%); }   /* top edge = exact divider green */
     .num-grid{ position:absolute; inset:0; opacity:.05; pointer-events:none;
       background-image:linear-gradient(var(--lime) 1px,transparent 1px),linear-gradient(90deg,var(--lime) 1px,transparent 1px);
       background-size:62px 62px; mask-image:radial-gradient(70% 70% at 50% 50%,#000 30%,transparent 100%);
@@ -2145,11 +2146,9 @@
       if (sawAnim) {
         const last = Math.max(0, sawAnim.totalFrames - 1);
         sawAnim.goToAndStop(enter * last, true);
-        sawLottieEl.style.opacity = easeOut(c01(enter / 0.35)).toFixed(3);   // soft fade in
         return;
       }
       // Fallback: coded two-panel entrance
-      numSaw.style.opacity = easeOut(c01(enter / 0.55)).toFixed(3);
       const fillT = easeOut(c01(enter / 0.85));
       const edgeT = easeOut(c01((enter - 0.25) / 0.75));
       if (sawFill) sawFill.setAttribute('transform', `translate(0 ${(150 * (1 - fillT)).toFixed(1)})`);
