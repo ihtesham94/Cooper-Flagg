@@ -551,9 +551,6 @@
     .stmt-reveal .slb { display: block; white-space: nowrap; }   /* 7 fixed lines on desktop */
     .stmt-reveal .gw  { display: inline-block; white-space: nowrap; }
     .stmt-reveal .gc  { display: inline-block; color: var(--light); opacity: 0; }
-    @media (prefers-reduced-motion: reduce) {
-      .stmt-reveal .gc { opacity: 0.92 !important; }
-    }
     @media (max-width: 768px) {
       #statement { margin-top: -100vh; position: relative; z-index: 1; height: 230vh; }   /* more scroll = readable reveal */   /* sits directly behind DIRIGO; revealed as it fades */
       .stmt-sticky { padding: 54px 24px; }
