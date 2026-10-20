@@ -1116,6 +1116,24 @@
        SHOE SECTION — scroll-scrubbed Hesi Low v2 (bright product moment)
        ════════════════════════════════════════════════════════ */
     #shoe{ position:relative; height:380vh; background:var(--cream); }
+    /* ── PAGE EDGE — bottom of Beyond the Court, cut in the CF monogram's pine-step language.
+       Same green + 40px grid as the statement (grid aligned in JS), masked to the Illustrator edge;
+       below the teeth it's transparent so the shoe section shows through — no white band. */
+    .stmt-edge{ position:absolute; left:0; right:0; top:-1px; z-index:7; pointer-events:none;
+      height:calc(100vw * 150 / 1920);
+      background-color:var(--dark);
+      background-image:linear-gradient(rgba(140,184,0,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(140,184,0,0.05) 1px, transparent 1px);
+      background-size:40px 40px;
+      -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 728 1920 150' preserveAspectRatio='none'%3E%3Cpath d='M0 728H1920V874.855H1752.371L1718.742 836.996V867.727L1638.242 784.910V828.238L1557.746 737.684V827.387L1473.336 778.684H0Z'/%3E%3C/svg%3E") 0 0/100% 100% no-repeat;
+              mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 728 1920 150' preserveAspectRatio='none'%3E%3Cpath d='M0 728H1920V874.855H1752.371L1718.742 836.996V867.727L1638.242 784.910V828.238L1557.746 737.684V827.387L1473.336 778.684H0Z'/%3E%3C/svg%3E") 0 0/100% 100% no-repeat; }
+    @media (max-width:768px){
+      /* keep the steps a readable size on phones: fixed height, anchored right (flat left side trims) */
+      .stmt-edge{ height:74px;
+        -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 728 1920 150' preserveAspectRatio='xMaxYMin slice'%3E%3Cpath d='M0 728H1920V874.855H1752.371L1718.742 836.996V867.727L1638.242 784.910V828.238L1557.746 737.684V827.387L1473.336 778.684H0Z'/%3E%3C/svg%3E") 0 0/100% 100% no-repeat;
+                mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 728 1920 150' preserveAspectRatio='xMaxYMin slice'%3E%3Cpath d='M0 728H1920V874.855H1752.371L1718.742 836.996V867.727L1638.242 784.910V828.238L1557.746 737.684V827.387L1473.336 778.684H0Z'/%3E%3C/svg%3E") 0 0/100% 100% no-repeat; }
+    }
+
     .shoe-stage{ position:sticky; top:0; height:100vh; overflow:hidden; background:var(--cream); z-index:1; }
     .shoe-bgword{ position:absolute; left:50%; top:46%; transform:translate(-50%,-50%);
       font-family:var(--fd); font-size:clamp(140px,26vw,440px); line-height:.8; letter-spacing:.01em;
@@ -1426,6 +1444,7 @@
 
 <!-- ── SHOE (Hesi Low v2) ─────────────────── -->
 <section id="shoe">
+  <div class="stmt-edge" id="stmtEdge" aria-hidden="true"></div>
   <div class="shoe-stage" id="shoeStage">
     <div class="shoe-bgword">HESI</div>
     <canvas id="shoe-canvas"></canvas>
@@ -2258,6 +2277,21 @@
     if (lenis && lenis.on) lenis.on('scroll', driftSaw);
     driftSaw();
   }
+
+  // ── PAGE EDGE grid alignment — continue the statement's 40px grid into the edge strip ──
+  (function(){
+    const edge = document.getElementById('stmtEdge');
+    const stage = document.querySelector('#statement .stmt-sticky');
+    if (!edge || !stage) return;
+    function alignEdgeGrid(){
+      // statement grid lines sit every 40px from the stage top; the stage's bottom meets the edge's top
+      const H = stage.offsetHeight;
+      const y = ((40 - (H % 40)) % 40) - 1;   // -1: the edge overlaps the seam by 1px
+      edge.style.backgroundPosition = `0 ${y}px, 0 ${y}px`;
+    }
+    alignEdgeGrid();
+    window.addEventListener('resize', alignEdgeGrid);
+  })();
 
   // ── PARALLAX STRIP ──────────────────────────
   const stripTl = gsap.timeline({
