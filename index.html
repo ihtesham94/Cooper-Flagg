@@ -1220,6 +1220,7 @@
       aspect-ratio:1920 / 1080; background:transparent; overflow:hidden; pointer-events:none; }
     .num-saw svg{ position:absolute; left:0; top:0; width:100%; height:auto; display:block; will-change:transform; }
     .num-saw .saw-lottie{ position:absolute; inset:0; }
+    @media (max-width:768px){ .num-saw{ aspect-ratio:auto; height:62vh; } }
     .num-saw .saw-lottie svg{ display:block; }
     .num-saw .saw-fill{ fill:var(--dark); }
     .num-saw .saw-edge{ fill:var(--lime); }
@@ -2144,6 +2145,7 @@
     // section's grid so the lines run straight through the seam. Applied as an SVG pattern
     // fill on the green shape, so it only ever appears on the green (never over the shoe).
     const numStageEl = document.querySelector('#numbers .num-stage');
+    const shoeStageForSaw = document.getElementById('shoeStage');
     const SVGNS = 'http://www.w3.org/2000/svg';
     let gridPat = null, greenPath = null;
     function setupSawGrid(){
@@ -2174,7 +2176,14 @@
       const r = sawWrap.getBoundingClientRect();
       // 0 as the divider's top enters the bottom of the screen → 1 when ~90% of it is in view
       const enter = c01((vh - r.top) / (Math.min(r.height, vh) * 0.9));
+      // Mobile: as the (taller) divider rises, fade the whole HESI scene out so nothing is half-covered
+      const sawMob = window.matchMedia('(max-width:768px)').matches;
+      window.__sawShoeFade = sawMob ? c01((enter - 0.12) / 0.45) : 0;
+      if (sawMob && shoeStageForSaw) shoeStageForSaw.style.opacity = (1 - window.__sawShoeFade).toFixed(3);
       if (sawAnim) {
+        const sv = sawLottieEl.querySelector('svg');
+        const par = sawMob ? 'none' : 'xMidYMax slice';      // portrait: stretch the artwork to fill the taller band
+        if (sv && sv.getAttribute('preserveAspectRatio') !== par) sv.setAttribute('preserveAspectRatio', par);
         const last = Math.max(0, sawAnim.totalFrames - 1);
         sawAnim.goToAndStop(enter * last, true);
         syncSawGrid();
@@ -2632,7 +2641,7 @@
       onUpdate:self=>{
         const p = self.progress;
         // hold on the CTA, then fade the whole shoe out to reveal the first stat sitting behind it
-        stageEl.style.opacity = '1';   // shoe stays intact and scrolls up; stats fade in afterwards
+        stageEl.style.opacity = (1 - (window.__sawShoeFade || 0)).toFixed(3);   // intact unless the mobile divider is fading it
         targetFrame = Math.min(1, p/0.72) * (TOTAL-1);
         scrollHint.style.opacity = p > 0.04 ? '0' : '1';
         const iv = Math.max(0, 1 - p/0.12);
@@ -2713,7 +2722,7 @@
       // as the green section rises into view, cross-fade: shoe fades out, stats fade in
       const vhh = window.innerHeight;
       const xfade = c01((vhh * 0.65 - rect.top) / (vhh * 0.5));
-      if(shoeStageEl) shoeStageEl.style.opacity = (1 - xfade).toFixed(3);
+      if(shoeStageEl) shoeStageEl.style.opacity = (1 - Math.max(xfade, window.__sawShoeFade || 0)).toFixed(3);
       let bf = p*N, idx = Math.min(Math.floor(bf), N-1), f = bf - idx;
       if(idx !== lastIdx){ setStatic(BEATS[idx], idx); lastIdx = idx; }
       const b = BEATS[idx];
